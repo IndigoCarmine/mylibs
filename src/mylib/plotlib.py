@@ -213,7 +213,7 @@ def plot1d(ax:Axes, data:XYData, plot_option:PlotOption = PlotOptions.paper.valu
     if range is not None:
         ax.set_xlim(range)
 
-def plot2d(ax:Axes, data:List[XYData], plot_option:PlotOption = PlotOptions.paper.value, range:Optional[Tuple[float, float]] = None)->None:
+def plot2d(ax:Axes, data:List[XYData], plot_option:PlotOption = PlotOptions.paper.value, xrange:Optional[Tuple[float, float]] = None,yrange:Optional[Tuple[float, float]] = None)->None:
     min,max = np.inf, -np.inf
     for d in data:
         plot_simple(ax, d, plot_option)
@@ -222,9 +222,12 @@ def plot2d(ax:Axes, data:List[XYData], plot_option:PlotOption = PlotOptions.pape
         if np.max(d.X) > max:
             max = np.max(d.X)
     
-    if range is not None:
-        min, max = range
+    if xrange is not None:
+        min, max = xrange
     ax.set_xlim(min, max)
+
+    if yrange is not None:
+        ax.set_ylim(yrange)
     
     
 

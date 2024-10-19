@@ -3,4 +3,4 @@ from . import plotlib
 from . import pipeline
 
 
-__version__ = '0.0.2'
+__version__ = '0.0.6'

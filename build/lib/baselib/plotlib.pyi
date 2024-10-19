@@ -4,7 +4,6 @@ import pandas as pd
 from dataclasses import dataclass
 from enum import Enum
 from matplotlib.axes import Axes
-from operator import le as le
 
 @dataclass
 class DataLabel:
