@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='core',
-    version='0.0.5',
+    version='0.0.6',
     license='proprietary',
     description='Core Library for me',
 

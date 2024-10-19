@@ -1,3 +1,4 @@
+README
 setup.py
 src/core.egg-info/PKG-INFO
 src/core.egg-info/SOURCES.txt

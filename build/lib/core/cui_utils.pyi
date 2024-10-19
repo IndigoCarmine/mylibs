@@ -1,3 +1,0 @@
-from core import typecheck as typecheck
-
-def input_path(message: str = 'Enter a file name: ') -> str: ...

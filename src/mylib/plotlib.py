@@ -33,6 +33,8 @@ class DataLabels(Enum):
     FL = DataLabel("wavelength", "nm", "intensity", "-" )
     CD = DataLabel("wavelength", "nm", "mdeg", "-" )
     IR = DataLabel("wavenumber", "cm-1", "absorbance", "-" )
+    XRD = DataLabel("2theta", "degree", "intensity", "-" )
+    
     
 
 @dataclass(frozen=True)
