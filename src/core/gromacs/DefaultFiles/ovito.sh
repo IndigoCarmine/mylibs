@@ -1,0 +1,1 @@
+ovito output.xtc input.gro
