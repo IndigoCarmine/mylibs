@@ -114,6 +114,39 @@ class MD(Calclation):
                     "ovito.sh": defaut_file_content("ovito.sh")
                 }
             
+class RuntimeSolvation(Calclation):
+    '''
+    solvation (calculate number of molecules at runtime from the cell size)
+    '''
+    def __init__(self, solvent:str = "MCH", name:str = "solvation", rate:float = 1.0, ntry:int = 300):
+        match solvent:
+            case "MCH":
+                self.solvent = "MCH"
+            case _:
+                raise ValueError("Invalid solvent")
+            
+        self.calculation_name = name
+        self.rate = rate
+        self.ntry = ntry
+
+    @override
+    def generate(self) -> dict[str,str]:
+        return {
+            "mdrun.sh"  : defaut_file_content("runtime_solvation.sh")
+                .replace("SOLVENT", self.solvent)
+                .replace("RATE", str(self.rate))
+                .replace("TRY", str(self.ntry)),
+            f"{self.solvent}.itp": defaut_file_content(f"{self.solvent}.itp"),
+            f"{self.solvent}.gro": defaut_file_content(f"{self.solvent}.gro"),
+            "runtime_solvation.py": defaut_file_content("runtime_solvation.py"),
+            "grommp.sh": 'echo "this is a dummy file for automation"',
+        }
+    
+    @override
+    @property
+    def name(self) -> str:
+        return self.calculation_name
+    
 
 
 class Solvation(Calclation):
@@ -130,6 +163,8 @@ class Solvation(Calclation):
         self.calculation_name = name
         self.nmol = nmol
         self.ntry = ntry
+    
+
     
     @classmethod
     def from_cell_size(cls, cell_size:np.ndarray,name:str = "solvation", solvent:str = "MCH",  rate:float = 1.0):
