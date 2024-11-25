@@ -1,16 +1,19 @@
-import numpy as np
-from _typeshed import Incomplete
-from core.molecules import AtomBase as AtomBase, IMolecule as IMolecule, Substructure as Substructure
 from dataclasses import dataclass
+
+import numpy as np
 from scipy.spatial.transform import Rotation
+
+from core.molecules import AtomBase as AtomBase
+from core.molecules import IMolecule as IMolecule
+from core.molecules import Substructure as Substructure
 
 class GroAtom(AtomBase):
     atom_name: str
     residue_name: str
     residue_number: int
-    index: Incomplete
-    coordinate: Incomplete
-    symbol: Incomplete
+    index: int
+    coordinate: np.ndarray
+    symbol: str
     def __init__(self, atom_number: int, atom_name: str, residue_name: str, residue_number: int, coordinate: np.ndarray) -> None: ...
     @property
     def atom_symbol(self): ...

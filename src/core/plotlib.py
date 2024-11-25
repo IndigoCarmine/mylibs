@@ -1,19 +1,17 @@
 import csv
+import os
 from dataclasses import dataclass
 from enum import Enum
 from math import isnan
-from operator import le
-import os
-from turtle import pos, title
+from typing import *
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from matplotlib.axes import Axes
 from typing_extensions import deprecated
-import numpy as np
-import matplotlib.pyplot as plt
-from typing import *
-import pandas as pd
 
 from core import typecheck
-
 
 # matplotlib setting (スライドに直接貼っても問題ないようにするため)
 plt.rcParams['font.family'] = 'Arial'

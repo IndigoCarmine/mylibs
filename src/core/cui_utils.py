@@ -3,7 +3,7 @@ from core import typecheck
 @typecheck.type_check
 def input_path(message: str = "Enter a file name: ") -> str:
     """
-    Get file path from user.
+    Read a string from standard input and get file path from user.
     easy to drag and drop file path.
     """
     return input(message).replace(
@@ -23,6 +23,7 @@ def format_return_char(string: str) -> str:
 def add_suffix(file_path: str, suffix: str) -> str:
     """
     Add suffix to file path.
+    e.g. add_suffix('test.txt', '_new') -> 'test_new.txt'
     """
     p = file_path.split('.')
     return '.'.join(p[:-1]) + suffix + '.' + p[-1]

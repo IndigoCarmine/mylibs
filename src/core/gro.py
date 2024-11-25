@@ -5,7 +5,10 @@ from typing import override
 from scipy.spatial.transform import Rotation
 import numpy as np
 
-from core.molecules import AtomBase, IMolecule, Substructure
+from core.molecules import AtomBase, IMolecule
+
+
+
 
 
 class GroAtom(AtomBase):

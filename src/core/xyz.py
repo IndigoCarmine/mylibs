@@ -1,11 +1,12 @@
 import copy
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
 from typing import Optional, cast, override
-from core.molecules import AtomBase, IMolecule, Substructure
+
 import numpy as np
 from scipy.spatial.transform import Rotation
 
+from core.molecules import AtomBase, IMolecule, Substructure
 
 gaussian_param_default = '''%NProcShared=24
 %Chk={name}.chk

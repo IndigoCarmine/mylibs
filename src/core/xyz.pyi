@@ -1,9 +1,13 @@
 import abc
+from dataclasses import dataclass
+
 import numpy as np
 from _typeshed import Incomplete
-from core.molecules import AtomBase as AtomBase, IMolecule as IMolecule, Substructure as Substructure
-from dataclasses import dataclass
 from scipy.spatial.transform import Rotation
+
+from core.molecules import AtomBase as AtomBase
+from core.molecules import IMolecule as IMolecule
+from core.molecules import Substructure as Substructure
 
 gaussian_param_default: str
 
@@ -40,8 +44,8 @@ class XyzMolecule(IMolecule, metaclass=abc.ABCMeta):
     def __init__(self, name, index, children) -> None: ...
 
 class XyzSubstructure(Substructure):
-    molecules: Incomplete
-    name: Incomplete
+    molecules: XyzMolecule
+    name: str
     def __init__(self, elements: list[XyzMolecule], name: str) -> None: ...
     @classmethod
     def from_Substructure(cls, sub: Substructure): ...
