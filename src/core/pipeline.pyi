@@ -1,5 +1,6 @@
-from core.typecheck import type_check as type_check
 from typing import Callable, Iterable
+
+from core.typecheck import type_check as type_check
 
 def join(funcs: list[Callable]) -> Callable: ...
 def flatten(data: Iterable[Iterable | object]) -> list: ...

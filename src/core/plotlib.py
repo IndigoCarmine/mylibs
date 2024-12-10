@@ -28,6 +28,8 @@ poster_color_red = "#FF0000"
 poster_color_blue = "#00A0FF"
 poster_color_yellow = "#FFFF00"
 
+slide_color_orange = "#ff7b00"
+
 class Style(Enum):
     paper = 0
     presentation_black = 1
@@ -42,6 +44,10 @@ class Color():
     def get_color(self, style:Style)->str:
         return self.colordict[style]
     
+    @classmethod
+    def single_color(cls, color:str)->'Color':
+        return cls({Style.paper: color, Style.presentation_black: color, Style.presentation_white: color, Style.poster_black_highcontrast: color})
+    
 
 colors:dict[str,Color] = {
     "red": Color({Style.paper: "red", Style.presentation_black: github_color_red, Style.presentation_white: "red", Style.poster_black_highcontrast: poster_color_red}),
@@ -49,7 +55,7 @@ colors:dict[str,Color] = {
     "yellow": Color({Style.paper: "yellow", Style.presentation_black: "yellow", Style.presentation_white: "yellow", Style.poster_black_highcontrast: poster_color_yellow}),
     "green": Color({Style.paper: "green", Style.presentation_black: "green", Style.presentation_white: "green", Style.poster_black_highcontrast: "green"}),
     "monotone": Color({Style.paper: "black", Style.presentation_black: "white", Style.presentation_white: "black", Style.poster_black_highcontrast: "white"}),
-}
+    "None": Color({Style.paper: None, Style.presentation_black: None, Style.presentation_white: None, Style.poster_black_highcontrast: None}),}
     
 
 @dataclass
@@ -77,6 +83,12 @@ class XYData:
 
     def rename_labels(self, label:DataLabel) -> 'XYData':
         return XYData(self.X, self.Y, label, self.Title)
+    def rename_title(self, title:str)->'XYData':
+        return XYData(self.X, self.Y, self.dataLabel, title)
+    
+    def get_y_at_range(self, xmin:float=-np.inf, xmax:float=np.inf)->np.ndarray:
+        mask = (self.X >= xmin) & (self.X <= xmax)
+        return self.Y[mask]
     
     
     def xshift(self, shift:float)->'XYData':
@@ -255,7 +267,25 @@ def load_dat(path:str,x_label:str="",y_label:str="", x_unit:str = "", y_unit:str
     return XYData(array[0].values, array[1].values, DataLabel(x_label,x_unit, y_label, y_unit))
     
 
+@typecheck.type_check
+def slice_data(data:list[XYData], x_value:float, new_x_values: list[float])->XYData:
+    def nearest(array, value):
+        idx = (np.abs(array - value)).argmin()
+        return idx
 
+    x_value_index = np.array([nearest(d.X, x_value) for d in data])
+    x_values = np.array([d.X[i] for d,i in zip(data, x_value_index)])
+    print("x_values is", x_values.mean() , "+-", x_values.std())
+
+    Y = np.array([d.Y[i] for d,i in zip(data, x_value_index)])
+    label = DataLabel("", "", data[0].dataLabel.Y_label, data[0].dataLabel.Y_unit)
+    return XYData(np.array(new_x_values), Y, label, str(x_value))
+
+
+    
+    
+    
+    
 
 
 
