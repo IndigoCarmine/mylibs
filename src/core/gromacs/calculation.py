@@ -223,9 +223,18 @@ def copy_inherited_files_script(destination:str) -> str:
     return "\n".join(scripts)
     
 
+class OvereriteType(enum.Enum):
+    '''
+    no : do not overwrite the working directory. If the directory already exists, raise an error
+    full_overwrite : remove the folder and recreate it
+    add_calculation : add the calculation if the calculation folder not exists. If the folder exists, skip generating the calculation.
+    '''
+    no = 0
+    full_overwrite = 1
+    add_calculation = 2
 
 
-def launch(calculations:list[Calclation], input_gro:str,working_dir:str,overwrite:bool = False):
+def launch(calculations:list[Calclation], input_gro:str,working_dir:str,overwrite:OvereriteType = OvereriteType.no):
     names = [calculation.name for calculation in calculations]
     # check if there are any duplicate names
     if len(names) != len(set(names)):
@@ -237,19 +246,24 @@ def launch(calculations:list[Calclation], input_gro:str,working_dir:str,overwrit
         dirname = os.path.join(working_dir, str(i) + "_" + calculation.name)
         # create folder in the working directory
         if os.path.exists(os.path.join(dirname)):
-            if overwrite:
-                # remove the folder and its content
-                for file in os.listdir(dirname):
-                    os.remove(os.path.join(dirname, file))
-                os.rmdir(dirname)
-            else:
-                raise ValueError("Working directory already exists", dirname)
-    
+            match overwrite:
+                case OvereriteType.no:
+                    raise ValueError("Working directory already exists", dirname)
+                case OvereriteType.full_overwrite:
+                    # remove the folder and its content
+                    for file in os.listdir(dirname):
+                        os.remove(os.path.join(dirname, file))
+                    os.rmdir(dirname)
+                case OvereriteType.add_calculation:
+                    continue
+                    
+                
         os.mkdir(dirname)
         
         # generate files
         files = calculation.generate()
         for name, content in files.items():
+
             with open(os.path.join(dirname, name), "w",newline="\n") as f:
                 f.write(content)
         

@@ -33,16 +33,28 @@ class MDType(enum.Enum):
 
 @dataclass
 class MD(Calclation):
-    type = type
-    calculation_name: str
-    nsteps: int = ...
-    gen_vel: str = ...
-    temparature: float = ...
+    type:MDType
+    calculation_name:str
+    nsteps:int = 10000
+    gen_vel:str = "yes"
+    temperature:float = 300
     @property
     def name(self) -> str: ...
     def generate(self) -> dict[str, str]: ...
-    def __init__(self, calculation_name, nsteps=..., gen_vel=..., temparature=...) -> None: ...
 
+
+class RuntimeSolvation(Calclation):
+    '''
+    solvation (calculate number of molecules at runtime from the cell size)
+    '''
+    def __init__(self, solvent:str = "MCH", name:str = "solvation", rate:float = 1.0, ntry:int = 300):...
+
+    @override
+    def generate(self) -> dict[str,str]:...
+    @override
+    @property
+    def name(self) -> str:...
+    
 
 class Solvation(Calclation):
     '''
@@ -59,6 +71,18 @@ class Solvation(Calclation):
 
 def copy_file_script(extension: str, destination: str) -> str: ...
 def copy_inherited_files_script(destination: str) -> str: ...
-def launch(calculations: list[Calclation], input_gro: str, working_dir: str, overwrite: bool = False): ...
+
+class OvereriteType(enum.Enum):
+    '''
+    no : do not overwrite the working directory. If the directory already exists, raise an error
+    full_overwrite : remove the folder and recreate it
+    add_calculation : add the calculation if the calculation folder not exists. If the folder exists, skip generating the calculation.
+    '''
+    no = 0
+    full_overwrite = 1
+    add_calculation = 2
+
+
+def launch(calculations: list[Calclation], input_gro: str, working_dir: str, overwrite: bool = OvereriteType): ...
 def test() -> None: ...
 def main() -> None: ...
