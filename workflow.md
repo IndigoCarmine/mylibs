@@ -9,5 +9,5 @@ rename? (change version in setup.py)
 
 
 ```bash
-pip install .
+pip install -e .
 ```

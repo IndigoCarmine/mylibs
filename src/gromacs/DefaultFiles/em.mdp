@@ -1,0 +1,9 @@
+integrator               = steep
+nsteps                   = {nsteps}
+emtol                    = {emtol}
+emstep                   = 0.1
+ns_type                  = grid
+rlist                    = 1
+rcoulomb                 = 1
+rvdw                     = 1
+pbc                      = xyz

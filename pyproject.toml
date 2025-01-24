@@ -1,0 +1,20 @@
+[project]
+name = "yagaiG-libs"
+version = "0.0.1"
+authors = [{ name = "Yuhei Yada", email = "tamanisikamiani@gmail.com" }]
+description = "This library contains a mixture of code that can be used with YagaiG's measuring equipment and code for MD. In fact, it should have a more decent structure, but it was too much trouble, so we packaged it as it is."
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = ["pydantic", "numpy", "pandas", "matplotlib", "scipy"]
+
+[project.optional-dependencies]
+dev = ["build", "twine", 'mypy']
+
+[project.urls]
+"Homepage" = "https://chem.tf.chiba-u.jp/yagai/index.html"
