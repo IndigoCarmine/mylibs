@@ -1,7 +1,7 @@
 import csv
 import os
 from typing import Optional
-from pydantic.dataclasses import dataclass
+from dataclasses import dataclass
 from enum import Enum
 from math import isnan
 
@@ -40,12 +40,12 @@ class Style(Enum):
 
 @dataclass
 class Color:
-    colordict: dict[Style, str]
+    colordict: dict[Style, str | None]
 
-    def __init__(self, colordict: dict[Style, str]):
+    def __init__(self, colordict: dict[Style, str | None]):
         self.colordict = colordict
 
-    def get_color(self, style: Style) -> str:
+    def get_color(self, style: Style) -> str | None:
         return self.colordict[style]
 
     @classmethod
@@ -176,7 +176,7 @@ class PlotOption:
     linewidth: float
 
 
-class PlotOptions(Enum):
+class PlotOptions:
     paper = PlotOption(colors["monotone"], None, 1, "-", 1.5)
     presentation = PlotOption(colors["monotone"], "o", 2, "-", 3)
 
@@ -192,13 +192,13 @@ class FigureOption:
 default_figure_size = (4, 3)
 
 
-class FigureOptions(Enum):
-    papar = FigureOption(default_figure_size, PlotOptions.paper.value)
+class FigureOptions:
+    papar = FigureOption(default_figure_size, PlotOptions.paper)
     presentation_white = FigureOption(
-        default_figure_size, PlotOptions.presentation.value, is_white_background=True
+        default_figure_size, PlotOptions.presentation, is_white_background=True
     )
     presentation_black = FigureOption(
-        default_figure_size, PlotOptions.presentation.value, is_white_background=False
+        default_figure_size, PlotOptions.presentation, is_white_background=False
     )
 
 
@@ -382,7 +382,7 @@ def slice_data(data: list[XYData], x_value: float, new_x_values: list[float]) ->
 @typecheck.type_check
 def plot_old(
     data: XYData,
-    figure_option: FigureOption = FigureOptions.papar.value,
+    figure_option: FigureOption = FigureOptions.papar,
     save_path: Optional[str] = None,
 ):
     fig = plt.figure()
@@ -409,8 +409,8 @@ def plot_old(
 def plot_simple(
     ax: Axes,
     data: XYData,
-    plot_option: PlotOption = PlotOptions.paper.value,
-    figure_option: FigureOption = FigureOptions.papar.value,
+    plot_option: PlotOption = PlotOptions.paper,
+    figure_option: FigureOption = FigureOptions.papar,
     style: Style = Style.paper,
 ) -> None:
     ax.plot(
@@ -433,8 +433,8 @@ def plot1d(
     ax: Axes,
     data: XYData,
     style: Style,
-    plot_option: PlotOption = PlotOptions.paper.value,
-    figure_option: FigureOption = FigureOptions.papar.value,
+    plot_option: PlotOption = PlotOptions.paper,
+    figure_option: FigureOption = FigureOptions.papar,
     range: Optional[tuple[float, float]] = None,
 ) -> None:
     plot_simple(ax, data, plot_option, style=style)
@@ -448,8 +448,8 @@ def plot2d(
     ax: Axes,
     data: list[XYData],
     style: Style,
-    plot_option: PlotOption = PlotOptions.paper.value,
-    figure_option: FigureOption = FigureOptions.papar.value,
+    plot_option: PlotOption = PlotOptions.paper,
+    figure_option: FigureOption = FigureOptions.papar,
     xrange: Optional[tuple[float, float]] = None,
     yrange: Optional[tuple[float, float]] = None,
 ) -> None:
