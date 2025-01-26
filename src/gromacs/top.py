@@ -1,7 +1,9 @@
 def modify_top(path: str, molecules: dict[str, int]):
     """
-    Modify the molecules section on topology file
+    This Function has not yet been coded.
+    Modify the molecules section on topology file.
     """
+    raise NotImplementedError
     lines = []
     with open(path, "r") as f:
         lines = f.readlines()
@@ -29,8 +31,10 @@ def modify_top(path: str, molecules: dict[str, int]):
 
 def load_molecules_from_file(path: str) -> dict[str, int]:
     """
+    This Function has not yet been coded.
     Load molecules from a file.
     """
+    raise NotImplementedError
     with open(path, "r") as f:
         lines = f.readlines()
 
