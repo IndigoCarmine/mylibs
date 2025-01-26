@@ -1,18 +1,24 @@
-import mole.molecules as i
+import mole.molecules as molecules
+
 
 def make_rosette[
-    A: i.AtomBase, T: i.IMolecule
-](monomer: T, n: int, size: float, angle: float, degree: bool = True) -> i.Substructure[
-    A, T
-]: ...
+    A: molecules.AtomBase, T: molecules.IMolecule
+](monomer: T, n: int, size: float, angle: float, degree: bool = True
+  ) -> molecules.Substructure[A, T]: ...
+
+
 def make_rosette2[
-    A: i.AtomBase, T: i.IMolecule
-](monomer: T, n: int, size: float) -> i.Substructure[A, T]: ...
+    A: molecules.AtomBase, T: molecules.IMolecule
+](monomer: T, n: int, size: float) -> molecules.Substructure[A, T]: ...
+
+
 def make_half_rosette2[
-    A: i.AtomBase, T: i.IMolecule
-](monomer: T, n: int, size: float) -> i.Substructure[A, T]: ...
+    A: molecules.AtomBase, T: molecules.IMolecule
+](monomer: T, n: int, size: float) -> molecules.Substructure[A, T]: ...
+
+
 def make_oligorosette[
-    A: i.AtomBase, T: i.IMolecule
+    A: molecules.AtomBase, T: molecules.IMolecule
 ](
     rosette: T,
     n: int,
@@ -20,4 +26,4 @@ def make_oligorosette[
     angle: float,
     slip: float = 0,
     degree: bool = True,
-) -> i.Substructure[A, T]: ...
+) -> molecules.Substructure[A, T]: ...

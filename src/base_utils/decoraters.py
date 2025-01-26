@@ -20,7 +20,8 @@ def apply_to_list(
     return wrapper
 
 
-def info_pass_through(func: Callable[[T], R]) -> Callable[[tuple[U, T]], tuple[U, R]]:
+def info_pass_through(
+        func: Callable[[T], R]) -> Callable[[tuple[U, T]], tuple[U, R]]:
     @wraps(func)
     def wrapper(arg: tuple[U, T]):
         u = arg[0]
@@ -36,14 +37,15 @@ class Result[I, R]:
     result: R
 
 
-I = TypeVar("I")
+InputType = TypeVar("InputType")
 P = TypeVar("P")
 
 
-def pipline(func: Callable[Concatenate[I, ...], R]) -> Callable[[I], Result[I, R]]:
+def pipline(
+        func: Callable[Concatenate[InputType, ...], R]) -> Callable[[InputType], Result[InputType, R]]:
     @wraps(func)
-    def wrapper(self: type, args=None) -> Result[I, R]:
-        if args == None:
+    def wrapper(self: type, args=None) -> Result[InputType, R]:
+        if args is None:
             return Result(self, func(self))
         else:
             return Result(self, func(self, args))

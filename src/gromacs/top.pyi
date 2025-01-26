@@ -4,6 +4,7 @@ def modify_top(path: str, molecules: dict[str, int]):
     """
     ...
 
+
 def load_molecules_from_file(path: str) -> dict[str, int]:
     """
     Load molecules from a file.

@@ -141,7 +141,11 @@ class XYData:
     def rename_title(self, title: str) -> "XYData":
         return XYData(self.X, self.Y, self.dataLabel, title)
 
-    def get_y_at_range(self, xmin: float = -np.inf, xmax: float = np.inf) -> np.ndarray:
+    def get_y_at_range(
+            self,
+            xmin: float = -np.inf,
+            xmax: float = np.inf
+    ) -> np.ndarray:
         mask = (self.X >= xmin) & (self.X <= xmax)
         return self.Y[mask]
 
@@ -195,10 +199,12 @@ default_figure_size = (4, 3)
 class FigureOptions:
     papar = FigureOption(default_figure_size, PlotOptions.paper)
     presentation_white = FigureOption(
-        default_figure_size, PlotOptions.presentation, is_white_background=True
+        default_figure_size, PlotOptions.presentation,
+        is_white_background=True
     )
     presentation_black = FigureOption(
-        default_figure_size, PlotOptions.presentation, is_white_background=False
+        default_figure_size, PlotOptions.presentation,
+        is_white_background=False
     )
 
 
@@ -262,7 +268,8 @@ def load_2ddata(path: str) -> list[XYData]:
     label, array = _load_jasco_data(path)
 
     return [
-        XYData(array[0].values[1:-1], array[i].values[1:-1], label, array[i].values[0])
+        XYData(array[0].values[1:-1], array[i].values[1:-1],
+               label, array[i].values[0])
         for i in range(1, len(array.columns))
     ][0:-1]
 
@@ -294,7 +301,8 @@ def load_xvgdata(path: str) -> XYData:
     # remove first row ( it is empty)
     data2 = data2[1:]
     return XYData(
-        data2[:, 0], data2[:, 1], DataLabel(xaxis, "", yaxis, ""), title + " " + legend
+        data2[:, 0], data2[:, 1], DataLabel(
+            xaxis, "", yaxis, ""), title + " " + legend
     )
 
 
@@ -305,7 +313,8 @@ def convert_from_df(df: pd.DataFrame, label: DataLabel) -> list[XYData]:
     first column is x, other columns are y
     """
     return [
-        XYData(np.array(df.iloc[:, 0].values), np.array(df.iloc[:, i].values), label)
+        XYData(np.array(df.iloc[:, 0].values),
+               np.array(df.iloc[:, i].values), label)
         for i in range(1, len(df.columns))
     ]
 
@@ -317,7 +326,8 @@ def load_jasco_data(p: str) -> list[XYData]:
     if isnan(data[0][0]):
         # is 2d data
         return [
-            XYData(data[0].values[1:-1], data[i].values[1:-1], label, data[i].values[0])
+            XYData(data[0].values[1:-1], data[i].values[1:-1],
+                   label, data[i].values[0])
             for i in range(1, len(data.columns))
         ][0:-1]
     else:
@@ -359,12 +369,16 @@ def load_dat(
     array = pd.DataFrame(data).astype(float)
 
     return XYData(
-        array[0].values, array[1].values, DataLabel(x_label, x_unit, y_label, y_unit)
+        array[0].values, array[1].values, DataLabel(
+            x_label, x_unit, y_label, y_unit)
     )
 
 
 @typecheck.type_check
-def slice_data(data: list[XYData], x_value: float, new_x_values: list[float]) -> XYData:
+def slice_data(
+        data: list[XYData],
+        x_value: float,
+        new_x_values: list[float]) -> XYData:
     def nearest(array, value):
         idx = (np.abs(array - value)).argmin()
         return idx
@@ -374,7 +388,8 @@ def slice_data(data: list[XYData], x_value: float, new_x_values: list[float]) ->
     print("x_values is", x_values.mean(), "+-", x_values.std())
 
     Y = np.array([d.Y[i] for d, i in zip(data, x_value_index)])
-    label = DataLabel("", "", data[0].dataLabel.Y_label, data[0].dataLabel.Y_unit)
+    label = DataLabel(
+        "", "", data[0].dataLabel.Y_label, data[0].dataLabel.Y_unit)
     return XYData(np.array(new_x_values), Y, label, str(x_value))
 
 
@@ -487,21 +502,3 @@ def for_black_background(ax: Axes) -> None:
     ax.tick_params(axis="x", colors="white", which="both")
     ax.tick_params(axis="y", colors="white", which="both")
     ax.title.set_color("white")
-
-
-def _test() -> None:
-    path1d = r"C:\Users\taman\Dropbox\python\plot\20240201_QuinPhTDP_100microM_MCH_NormalCoolingSingleWaveLen.txt"
-    path2d = r"C:\Users\taman\Dropbox\python\plot\20240512_iQuinPhTDP_50microM_MCH_NormalCooling.txt"
-
-    data1d = load_1ddata(path1d)
-    data2d = load_2ddata(path2d)
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    plot_option = PlotOptions.paper.value
-    plot_option.marker = None
-    plot2d(ax, data2d, plot_option, (250, 400))
-    plt.show()
-
-
-if __name__ == "__main__":
-    _test()

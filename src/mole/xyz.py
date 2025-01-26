@@ -77,7 +77,8 @@ class XyzMolecule(IMolecule):
         return cls(
             "molecule",
             0,
-            [XyzAtom(atom.symbol, atom.index, atom.coordinate) for atom in atoms],
+            [XyzAtom(atom.symbol, atom.index, atom.coordinate)
+             for atom in atoms],
         )
 
     @staticmethod
@@ -88,10 +89,13 @@ class XyzMolecule(IMolecule):
     def inner_move_to_xz_plane(self, target_atoms: list[XyzAtom]):
         """
         move molecule to xz plane
-        fit plane to target_atoms and move molecule so that the plane is equal to xz plane
+        fit plane to target_atoms and move molecule
+        so that the plane is equal to xz plane
         """
         popt: list[float] = [0, 0, 0, 0]
-        popt, _ = curve_fit(f=XyzMolecule._plane, xdata=np.array([atom.coordinate for atom in target_atoms]).T, ydata=np.array([0 for atom in target_atoms]))  # type: ignore
+        x = np.array([atom.coordinate for atom in target_atoms]).T
+        y = np.array([0 for _ in target_atoms])
+        popt, _ = curve_fit(f=XyzMolecule._plane, xdata=x, ydata=y)
         a, b, c, d = popt
         # fit to xy plane
         self.rotate(Rotation.from_euler("x", np.arctan(-b / c), degrees=True))
@@ -121,7 +125,8 @@ class XyzMolecule(IMolecule):
         lines = [line for line in lines if line != ""]
         lines2 = [line.split() for line in lines]
         for line in lines2:
-            atom_list.append(XyzAtom(line[0], 0, np.array(line[1:4], dtype=float)))
+            atom_list.append(
+                XyzAtom(line[0], 0, np.array(line[1:4], dtype=float)))
 
         return cls(name, 0, atom_list)
 
@@ -138,7 +143,7 @@ class XyzMolecule(IMolecule):
         # find @<TRIPOS>ATOM line and @... line after that
         for i, line in enumerate(lines):
             if line.strip() == "@<TRIPOS>ATOM":
-                lines = lines[i + 1 :]
+                lines = lines[i + 1:]
                 break
         for i, line in enumerate(lines):
             if line.strip()[0] == "@":
@@ -168,7 +173,7 @@ class XyzMolecule(IMolecule):
         """
         save xyz file
         """
-        if filename == None:  # if filename is not given, save as name.xyz
+        if filename is None:  # if filename is not given, save as name.xyz
             filename = self.name + ".xyz"
         # apply rotation and translation to atoms
         mol = copy.deepcopy(self)
@@ -189,7 +194,7 @@ class XyzMolecule(IMolecule):
     def generate_gaussian_input(
         self, dir_path: str, gaussan_pram: str | None = None
     ) -> None:
-        if gaussan_pram == None:
+        if gaussan_pram is None:
             gaussan_pram = gaussian_param_default.format(name=self.name)
 
         gaussan_pram = str(gaussan_pram)
@@ -226,7 +231,8 @@ class XyzSubstructure(Substructure):
     def from_Substructure(cls, sub: Substructure):
         children: list[XyzMolecule] = sub.get_children()
         return cls(
-            [XyzMolecule.make_from(mol, mol.name, mol.index) for mol in children], ""
+            [XyzMolecule.make_from(mol, mol.name, mol.index)
+             for mol in children], ""
         )
 
     def extract_xyz(self, filename: str) -> None:
@@ -238,7 +244,8 @@ class XyzSubstructure(Substructure):
 
         # write number of atoms (first line)
         f.write(
-            str(sum([molecule.sizeofAtoms() for molecule in temp_agg.molecules])) + "\n"
+            str(sum([molecule.sizeofAtoms()
+                for molecule in temp_agg.molecules])) + "\n"
         )
         f.write("\n")
         for molecule in temp_agg.molecules:
@@ -257,12 +264,14 @@ class XyzSubstructure(Substructure):
         """
         generate gaussian input file
 
-        fragment: if True, set fragment index like this (for Counterpoise method) :
+        fragment: if True, set fragment index like this
+        (for Counterpoise method) :
+
         H (Fragment=1) 0.000000000000 0.000000000000 0.000000000000
 
         """
 
-        if gaussan_pram == None:
+        if gaussan_pram is None:
             gaussan_pram = gaussian_param_default.format(name=self.name)
         gaussan_pram = str(gaussan_pram)
         temp_agg = copy.deepcopy(self)

@@ -3,7 +3,7 @@ from typing import Iterable, Callable
 from base_utils.typecheck import type_check
 
 
-#### basic pipeline functions ####
+# basic pipeline functions #
 
 
 @type_check
@@ -40,7 +40,7 @@ def flatten(data: Iterable[Iterable | object]) -> list:
     return result
 
 
-#### file related functions ####
+# file related functions #
 
 
 @type_check
@@ -75,7 +75,8 @@ def find_all_file_by_prefix(path: str, prefix: str) -> list[str]:
     """
 
     all_files = find_all_file(path)
-    return [file for file in all_files if os.path.basename(file).startswith(prefix)]
+    return [file for file in all_files
+            if os.path.basename(file).startswith(prefix)]
 
 
 @type_check

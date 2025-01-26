@@ -15,7 +15,8 @@ def type_check(func):
             # 引数のアノテーションを取得
             arg_annotation = func_signature.parameters[arg_key].annotation
             specified_arg_type = (
-                arg_annotation if type(arg_annotation) is type else inspect._empty
+                arg_annotation if type(
+                    arg_annotation) is type else inspect._empty
             )
             # 引数とアノテーションの型を比較
             if (
@@ -24,7 +25,8 @@ def type_check(func):
             ):
                 error_msg = '引数"{}"の型が対応していません。（アノテーション：{}、引数の型：{})'
                 raise TypeError(
-                    error_msg.format(arg_key, specified_arg_type, type(arg_value))
+                    error_msg.format(
+                        arg_key, specified_arg_type, type(arg_value))
                 )
 
         # 関数の実行
@@ -33,7 +35,8 @@ def type_check(func):
         # 戻り値の型チェック
         return_annotation = func_signature.return_annotation
         specified_return_type = (
-            return_annotation if type(return_annotation) is type else inspect._empty
+            return_annotation if type(
+                return_annotation) is type else inspect._empty
         )
         # 戻り値とアノテーションの型を比較
         if (
@@ -43,7 +46,8 @@ def type_check(func):
             error_msg = (
                 "戻り値の型が対応していません。（アノテーション：{}、戻り値の型：{})"
             )
-            raise TypeError(error_msg.format(specified_return_type, type(results)))
+            raise TypeError(error_msg.format(
+                specified_return_type, type(results)))
 
         return results
 

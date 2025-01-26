@@ -25,7 +25,7 @@ class GroAtom(AtomBase):
         self.residue_name = residue_name
         self.residue_number = residue_number
 
-        ## atombase properties
+        # atombase properties
         self.index = atom_number
         self.coordinate = coordinate
         self.symbol = self.atom_symbol
@@ -51,7 +51,11 @@ class GroAtom(AtomBase):
         y = float(line[28:36])
         z = float(line[36:44])
         return cls(
-            atom_number, atom_name, residue_name, residue_number, np.array([x, y, z])
+            atom_number,
+            atom_name,
+            residue_name,
+            residue_number,
+            np.array([x, y, z])
         )
 
     def __deepcopy__(self, memo) -> "GroAtom":
@@ -128,7 +132,7 @@ class GroFile(IMolecule[GroAtom]):
         for atom in self.atoms:
             atom.residue_number = number
 
-    ################# XYZ FILE input/output #################
+    # --------------------- XYZ FILE input/output ---------------------
 
     def generate_xyz_text(self) -> list[str]:
 
@@ -141,7 +145,8 @@ class GroFile(IMolecule[GroAtom]):
         xyz.append(self.title)
         for atom in self.atoms:
             xyz.append(
-                f"{atom.atom_symbol} {format_float(atom.coordinate[0] * NM_TO_ANGSTROM)} {format_float(atom.coordinate[1] * NM_TO_ANGSTROM)} {format_float(atom.coordinate[2] * NM_TO_ANGSTROM)}"
+                f"{atom.atom_symbol} {format_float(atom.coordinate[0] * NM_TO_ANGSTROM)} {format_float(
+                    atom.coordinate[1] * NM_TO_ANGSTROM)} {format_float(atom.coordinate[2] * NM_TO_ANGSTROM)}"
             )
         return xyz
 
@@ -172,7 +177,8 @@ class GroFile(IMolecule[GroAtom]):
         else:
             if atomnum % len(self.atoms) != 0:
                 raise ValueError(
-                    "number of atoms in xyz file is not multiple of number of atoms in gro file"
+                    "number of atoms in xyz file is "
+                    "not multiple of number of atoms in gro file"
                 )
             molnum = atomnum // len(self.atoms)
             atoms = []
@@ -182,7 +188,8 @@ class GroFile(IMolecule[GroAtom]):
                     atom = deepcopy(self.atoms[i])
                     atom.index = atom.index + n * len(self.atoms)
                     atom.coordinate = (
-                        np.array([float(line[1]), float(line[2]), float(line[3])])
+                        np.array([float(line[1]), float(
+                            line[2]), float(line[3])])
                         * ANGSTROM_TO_NM
                     )
                     atoms.append(atom)

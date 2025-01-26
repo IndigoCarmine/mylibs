@@ -25,9 +25,11 @@ class Calclation(ABC):
 
     @abstractmethod
     def generate(self) -> dict[str, str]:
-        Exception("This method must be implemented. Abstract method was called")
+        Exception("This method must be implemented. " +
+                  "Abstract method was called")
         """
-        dict[str,str] : key is the name of the file, value is the content of the file 
+        dict[str,str] : key is the name of the file,
+        value is the content of the file
         """
         return {}
 
@@ -48,7 +50,9 @@ class EM(Calclation):
     calculation_name: str = "em"
     defines: list[str] = dataclasses.field(default_factory=list)
     maxwarn: int = (
-        0  # maximum number of warnings (if you dont understand this parameter, Set it to 0!)
+        # maximum number of warnings
+        # (if you dont understand this parameter, Set it to 0!)
+        0
     )
     useRestraint: bool = False
 
@@ -80,7 +84,8 @@ class EM(Calclation):
                 .add_or_update("nsteps", self.nsteps)
                 .add_or_update("emtol", self.emtol)
                 .add_or_update(
-                    "define", " ".join(["-D" + define for define in self.defines])
+                    "define", " ".join(
+                        ["-D" + define for define in self.defines])
                 )
                 .export(),
                 "grommp.sh": defaut_file_content("grommp.sh").format(
@@ -106,12 +111,19 @@ class MD(Calclation):
     type: MDType
     calculation_name: str
     nsteps: int = 10000
-    nstout: int = 1000  # frequency to write the coordinates to the trajectory file
+
+    # frequency to write the coordinates to the trajectory file
+    nstout: int = 1000
+
     gen_vel: str = "yes"
     temperature: float = 300
     defines: list[str] = dataclasses.field(default_factory=list)
+
+    # maximum number of warnings
+    # (if you dont understand this parameter, Set it to 0!)
     maxwarn: int = (
-        0  # maximum number of warnings (if you dont understand this parameter, Set it to 0!)
+
+        0
     )
     useRestraint: bool = False
     useSemiisotropic: bool = False
@@ -166,16 +178,19 @@ class MD(Calclation):
                     mdp_file.add_or_update("refcoord_scaling", "all")
                 if len(self.defines) != 0:
                     mdp_file.add_or_update(
-                        "define", " ".join(["-D" + define for define in self.defines])
+                        "define", " ".join(
+                            ["-D" + define for define in self.defines])
                     )
                 if self.useSemiisotropic:
                     mdp_file.add_or_update("pcoupltype", "semiisotropic")
                     mdp_file.add_or_update(
-                        "ref_p", " ".join([mdp_file.get("ref_p") for _ in range(2)])
+                        "ref_p", " ".join([mdp_file.get("ref_p")
+                                          for _ in range(2)])
                     )
                     mdp_file.add_or_update(
                         "compressibility",
-                        " ".join([mdp_file.get("compressibility") for _ in range(2)]),
+                        " ".join([mdp_file.get("compressibility")
+                                 for _ in range(2)]),
                     )
 
                 return {
@@ -189,7 +204,8 @@ class MD(Calclation):
                 }
 
             case MDType.nose_hoover_parinello_rahman:
-                raise NotImplementedError("parrameters are not linked to the mdp file")
+                raise NotImplementedError(
+                    "parrameters are not linked to the mdp file")
                 return {
                     "setting.mdp": defaut_file_content(
                         "nose_hoover_parinello_rahman.mdp"
@@ -202,7 +218,8 @@ class MD(Calclation):
                     "ovito.sh": defaut_file_content("ovito.sh"),
                 }
             case MDType.berendsen:
-                raise NotImplementedError("parrameters are not linked to the mdp file")
+                raise NotImplementedError(
+                    "parrameters are not linked to the mdp file")
                 return {
                     "setting.mdp": defaut_file_content("berendsen.mdp"),
                     "grommp.sh": defaut_file_content("grommp.sh").format(
@@ -274,7 +291,8 @@ class RuntimeSolvation(Calclation):
                 mass = 98.186  # g/mol
                 mass_den = mass / density  # cm^3/mol = nm^3/mol * 10e21
 
-                nmol = int(volume / mass_den * self.rate * Na)  # number of molecules
+                # number of molecules
+                nmol = int(volume / mass_den * self.rate * Na)
                 natoms = nmol * 20  # number of atoms
 
             case _:
@@ -318,7 +336,9 @@ class Solvation(Calclation):
     ):
         """
         try to fill the cell with the solvent as much as density of the solvent
-        rate : the rate of the solvent filling in the cell (when 1.0, the cell is filled with the solvent as much as the density of the solvent)
+        rate : the rate of the solvent filling in the cell
+        (when 1.0, the cell is filled with the solvent
+        as much as the density of the solvent.)
         """
         volume = np.prod(cell_size)  # nm^3
         print("The volume of the cell is", volume, "nm^3")
@@ -373,9 +393,12 @@ def copy_inherited_files_script(destination: str) -> str:
 
 class OverwriteType(enum.Enum):
     """
-    no : do not overwrite the working directory. If the directory already exists, raise an error
+    no : do not overwrite the working directory.
+    If the directory already exists, raise an error
     full_overwrite : remove the folder and recreate it
-    add_calculation : add the calculation if the calculation folder not exists. If the folder exists, skip generating the calculation.
+    add_calculation : add the calculation
+    if the calculation folder not exists.
+    If the folder exists, skip generating the calculation.
     """
 
     no = 0
@@ -400,14 +423,15 @@ def launch(
         # create folder in the working directory
         if os.path.exists(os.path.join(dirname)):
             match overwrite:
-                case OvereriteType.no:
-                    raise ValueError("Working directory already exists", dirname)
-                case OvereriteType.full_overwrite:
+                case OverwriteType.no:
+                    raise ValueError(
+                        "Working directory already exists", dirname)
+                case OverwriteType.full_overwrite:
                     # remove the folder and its content
                     for file in os.listdir(dirname):
                         os.remove(os.path.join(dirname, file))
                     os.rmdir(dirname)
-                case OvereriteType.add_calculation:
+                case OverwriteType.add_calculation:
                     continue
 
         os.mkdir(dirname)
@@ -420,16 +444,16 @@ def launch(
 
         # create a script to run the calculation
         with open(os.path.join(dirname, "run.sh"), "w", newline="\n") as f:
-            f.write(f"bash grommp.sh\n")
-            f.write(f"bash mdrun.sh\n")
+            f.write("bash grommp.sh\n")
+            f.write("bash mdrun.sh\n")
             if i != len(calculations) - 1:
-                f.write(f". copy.sh\n")
+                f.write(". copy.sh\n")
 
         if i == len(calculations) - 1:
             """last calculation"""
             break
 
-        # addtionally, if there is a next calculation, create a script to copy inherited files
+        # addtionally, if there is a next calculation,
         # create a script to copy inherited files
         with open(os.path.join(dirname, "copy.sh"), "w", newline="\n") as f:
             f.write(
@@ -442,7 +466,8 @@ def launch(
 
     # copy input file to the first calculation
     shutil.copy2(
-        input_gro, os.path.join(working_dir, "0_" + calculations[0].name, "input.gro")
+        input_gro, os.path.join(
+            working_dir, "0_" + calculations[0].name, "input.gro")
     )
 
     # create a script to all the calculations
@@ -450,7 +475,7 @@ def launch(
     with open(os.path.join(working_dir, "run.sh"), "w", newline="\n") as f:
         for i, calc in enumerate(calculations):
             f.write(f"cd {str(i) + '_' + calc.name}\n")
-            f.write(f"bash run.sh\n")
+            f.write("bash run.sh\n")
             f.write("cd ..\n")
             f.write("\n")
             f.write("\n")
@@ -466,16 +491,18 @@ def generate_stepbystep_runfile(
 
     for calculation_name, do_paralel in calculation_name_and_isparaleljob:
         with open(
-            os.path.join(calc_path, f"{calculation_name}.sh"), "w", newline="\n"
+            os.path.join(calc_path, f"{calculation_name}.sh"),
+            "w",
+            newline="\n"
         ) as f:
             if do_paralel:
                 f.write("echo 'Starting paralel job'\n")
             for file in init_structures:
                 f.write(f"cd {file}/{calculation_name}\n")
                 if do_paralel:
-                    f.write(f"bash run.sh &\n")
+                    f.write("bash run.sh &\n")
                 else:
-                    f.write(f"bash run.sh\n")
+                    f.write("bash run.sh\n")
                 f.write("cd ../..\n")
                 f.write("\n")
             if do_paralel:

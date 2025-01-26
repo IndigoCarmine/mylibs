@@ -78,7 +78,8 @@ class Substructure[A: AtomBase, T: IMolecule[A]](IObject, Iterable[T]):
         """
         concatenate all molecules as one molecule
         """
-        return [atom for molecule in self.molecules for atom in molecule.get_children()]
+        return [atom for molecule in self.molecules
+                for atom in molecule.get_children()]
 
     def as_molecule(self, type: type[IMolecule]) -> T:
         """

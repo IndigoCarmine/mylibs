@@ -1,24 +1,23 @@
 import copy
 
 import numpy as np
-import mole.molecules as i
+import mole.molecules as molecules
 from scipy.spatial.transform import Rotation
-
-import matplotlib.pyplot as plt
 
 
 def make_rosette[
-    T: i.IMolecule
+    T: molecules.IMolecule
 ](
     monomer: T, n: int, size: float, angle: float, degree: bool = True
-) -> mole.Substructure[T]:
+) -> molecules.Substructure[T]:
     """
     make rosette from monomer
     n: number of monomer
     size: diamiter of circle setting monomer top atom
     angle: angle between monomer Otop=C vector and normal vector of the circle
     """
-    rosette = i.Substructure([copy.deepcopy(monomer) for i in range(n)])
+    rosette = molecules.Substructure(
+        [copy.deepcopy(monomer) for i in range(n)])
 
     radius = size / 2
     # move monomer to circle
@@ -37,13 +36,15 @@ def make_rosette[
     # rosette.extract_xyz('')
 
 
-def make_rosette2[T: i.IMolecule](monomer: T, n: int, size: float) -> i.Substructure[T]:
+def make_rosette2[T: molecules.IMolecule](
+        monomer: T, n: int, size: float
+) -> molecules.Substructure[T]:
     """
     make rosette from monomer
     n: number of monomer
     size: diamiter of circle setting monomer top atom
     """
-    rosette: i.Substructure[T] = i.Substructure(
+    rosette: molecules.Substructure[T] = molecules.Substructure(
         [copy.deepcopy(monomer) for i in range(n)]
     )
 
@@ -60,14 +61,14 @@ def make_rosette2[T: i.IMolecule](monomer: T, n: int, size: float) -> i.Substruc
 
 
 def make_half_rosette2[
-    T: i.IMolecule
-](monomer: T, n: int, size: float) -> i.Substructure[T]:
+    T: molecules.IMolecule
+](monomer: T, n: int, size: float) -> molecules.Substructure[T]:
     """
     make rosette from monomer
     n: number of monomer (half of rosette)
     size: diamiter of circle setting monomer top atom
     """
-    rosette: i.Substructure[T] = i.Substructure(
+    rosette: molecules.Substructure[T] = molecules.Substructure(
         [copy.deepcopy(monomer) for i in range(n)]
     )
 
@@ -84,7 +85,7 @@ def make_half_rosette2[
 
 
 def make_oligorosette[
-    T: i.IMolecule
+    T: molecules.IMolecule
 ](
     rosette: T,
     n: int,
@@ -92,7 +93,7 @@ def make_oligorosette[
     angle: float,
     slip: float = 0,
     degree: bool = True,
-) -> i.Substructure[T]:
+) -> molecules.Substructure[T]:
     """
     make stacked rosette from rosette
     n: number of rosette
@@ -100,7 +101,8 @@ def make_oligorosette[
     angle: how much rotate rosette
     slip: slip distance of rosette
     """
-    oligorosette = i.Substructure[T]([copy.deepcopy(rosette) for i in range(n)])
+    oligorosette = molecules.Substructure[T](
+        [copy.deepcopy(rosette) for i in range(n)])
 
     # distance between supramolecular polymer axis and rosette.
     radius = 0

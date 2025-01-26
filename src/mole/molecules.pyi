@@ -1,12 +1,11 @@
 import abc
 from abc import ABCMeta, abstractmethod
-from ast import TypeVar as TypeVar
 from dataclasses import dataclass
-from symtable import Symbol as Symbol
 from typing import Iterable
 
 import numpy as np
 from scipy.spatial.transform import Rotation
+
 
 class IObject(metaclass=ABCMeta):
     @abstractmethod
@@ -16,14 +15,16 @@ class IObject(metaclass=ABCMeta):
     @abstractmethod
     def rotate(self, rotation: Rotation): ...
 
+
 @dataclass
 class AtomBase:
     symbol: str
     index: int
     coordinate: np.ndarray
     @classmethod
-    def cast(cls, atom: AtomBase) -> AtomBase: ...
+    def cast(cls, atom: "AtomBase") -> "AtomBase": ...
     def __init__(self, symbol, index, coordinate) -> None: ...
+
 
 class IMolecule[Atom: AtomBase](IObject, metaclass=abc.ABCMeta):
     @abstractmethod
@@ -32,6 +33,7 @@ class IMolecule[Atom: AtomBase](IObject, metaclass=abc.ABCMeta):
     def get_child(self, index: int) -> Atom: ...
     @classmethod
     def make(cls, atoms: list[Atom]): ...
+
 
 class Substructure[A: AtomBase, T: IMolecule[A]](IObject, Iterable[T]):
     molecules: list[T]

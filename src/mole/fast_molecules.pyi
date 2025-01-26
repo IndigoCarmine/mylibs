@@ -2,8 +2,10 @@ import mole.molecules as mol
 import numpy as np
 from scipy.spatial.transform import Rotation
 
+
 class FastStructWapper[T: mol.IMolecule]():
     def __init__(self, molecule: T): ...
+
     @classmethod
     def from_substructure(
         cls, substructure: mol.Substructure

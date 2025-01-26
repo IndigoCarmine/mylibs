@@ -18,11 +18,13 @@ class FastStructWapper[T: mol.IMolecule]():
     def __init__(self, molecule: T):
         self.molecule = molecule
         self.n_atoms = len(molecule.get_children())
-        self.coordinates = [atom.coordinate for atom in molecule.get_children()]
+        self.coordinates = [
+            atom.coordinate for atom in molecule.get_children()]
         self.n_mols = 1
 
     @classmethod
-    def from_substructure(cls, substructure: mol.Substructure) -> "FastStructWapper":
+    def from_substructure(cls, substructure: mol.Substructure
+                          ) -> "FastStructWapper":
         temp = cls(substructure.molecules[0])
         temp.n_mols = len(substructure.molecules)
         atoms = np.concatenate(
@@ -47,7 +49,10 @@ class FastStructWapper[T: mol.IMolecule]():
 
     def generate_as_molecule(self, Type: type) -> T:
         """
-        T: type of the molecule. (It should be same as the type of input molecule) it need for calling make function. TODO: rewrite better.
+        T: type of the molecule.
+        (It should be same as the type of input molecule)
+        it need for calling make function. TODO: rewrite better.
+
         generate a molecule object from the current coordinates.
 
         """
@@ -63,7 +68,8 @@ class FastStructWapper[T: mol.IMolecule]():
         """
         regenerate the coordinates from the original molecule.
         """
-        self.coordinates = [atom.coordinate for atom in self.molecule.get_children()]
+        self.coordinates = [
+            atom.coordinate for atom in self.molecule.get_children()]
         self.n_mols = 1
 
     def replicate(self, n: int):
@@ -85,7 +91,7 @@ class FastStructWapper[T: mol.IMolecule]():
         if index >= self.n_mols:
             raise ValueError("index out of range")
         self.coordinates[
-            index * self.n_atoms : (index + 1) * self.n_atoms
+            index * self.n_atoms: (index + 1) * self.n_atoms
         ] += coordinate
 
     def rotate_one(self, index: int, rotation: Rotation):
@@ -96,9 +102,10 @@ class FastStructWapper[T: mol.IMolecule]():
         if index >= self.n_mols:
             raise ValueError("index out of range")
 
-        self.coordinates[index * self.n_atoms : (index + 1) * self.n_atoms] = (
+        self.coordinates[index * self.n_atoms: (index + 1) * self.n_atoms] = (
             rotation.apply(
-                self.coordinates[index * self.n_atoms : (index + 1) * self.n_atoms]
+                self.coordinates[index *
+                                 self.n_atoms: (index + 1) * self.n_atoms]
             )
         )
 
@@ -152,7 +159,7 @@ class FastStructWapper[T: mol.IMolecule]():
         )  # big number (Covalent bond at 1000 nm is impossible!)
         wrap = np.kron(mol_identity, np.ones((self.n_atoms, self.n_atoms)))
         """
-        wrap is like this when n_mols = 2, n_atoms = 3: 
+        wrap is like this when n_mols = 2, n_atoms = 3:
         1000 1000 1000 0    0    0
         1000 1000 1000 0    0    0
         1000 1000 1000 0    0    0
@@ -163,10 +170,11 @@ class FastStructWapper[T: mol.IMolecule]():
 
         dist = (
             dist + wrap
-        )  # if the atoms are in the same molecule, the distance is added by 1000.
+            # if the atoms are in the same molecule,
+            # the distance is added by 1000.
+        )
         """
         dist is like this when n_mols = 2, n_atoms = 3:
-        
         1000 1000 1000 0.x  0.x  0.x
         1000 1000 1000 0.x  0.x  0.x
         1000 1000 1000 0.x  0.x  0.x
@@ -174,7 +182,8 @@ class FastStructWapper[T: mol.IMolecule]():
         0.x  0.x  0.x  1000 1000 1000
         0.x  0.x  0.x  1000 1000 1000
 
-        finally, evaluate only zero elements in wrap matrix (it means the distance between the atoms in different molecules)
+        finally, evaluate only zero elements in wrap matrix
+        (it means the distance between the atoms in different molecules)
         """
 
         a = dist.flatten()
