@@ -130,7 +130,7 @@ class Solvation(Calclation):
 def copy_file_script(extension: str, destination: str) -> str: ...
 def copy_inherited_files_script(destination: str) -> str: ...
 
-class OvereriteType(enum.Enum):
+class OverwriteType(enum.Enum):
     """
     no : do not overwrite the working directory. If the directory already exists, raise an error
     full_overwrite : remove the folder and recreate it
@@ -145,7 +145,7 @@ def launch(
     calculations: list[Calclation],
     input_gro: str,
     working_dir: str,
-    overwrite: OvereriteType = OvereriteType.no,
+    overwrite: OverwriteType = OverwriteType.no,
 ): ...
 def generate_stepbystep_runfile(
     init_structures: list[str],

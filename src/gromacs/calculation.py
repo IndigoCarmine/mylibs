@@ -7,8 +7,7 @@ import os
 import shutil
 from typing import override
 
-from base_utils.cui_utils import format_return_char
-import base_utils.gromacs.mdp as mdp
+import gromacs.mdp as mdp
 import numpy as np
 
 
@@ -372,7 +371,7 @@ def copy_inherited_files_script(destination: str) -> str:
     return "\n".join(scripts)
 
 
-class OvereriteType(enum.Enum):
+class OverwriteType(enum.Enum):
     """
     no : do not overwrite the working directory. If the directory already exists, raise an error
     full_overwrite : remove the folder and recreate it
@@ -388,7 +387,7 @@ def launch(
     calculations: list[Calclation],
     input_gro: str,
     working_dir: str,
-    overwrite: OvereriteType = OvereriteType.no,
+    overwrite: OverwriteType = OverwriteType.no,
 ):
     names = [calculation.name for calculation in calculations]
     # check if there are any duplicate names
