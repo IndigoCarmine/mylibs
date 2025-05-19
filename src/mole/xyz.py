@@ -2,7 +2,7 @@ import copy
 import os
 from dataclasses import dataclass
 from typing import Optional, cast, override
-
+from scipy.optimize import curve_fit
 import numpy as np
 from scipy.spatial.transform import Rotation
 
@@ -10,7 +10,7 @@ from mole.molecules import AtomBase, IMolecule, Substructure
 
 gaussian_param_default = """%NProcShared=24
 %Chk={name}.chk
-#p opt b3lyp/6-31+g(d,p) int=fine pop=full 
+#p opt b3lyp/6-31+g(d,p) int=fine pop=full
 """
 
 
@@ -152,7 +152,7 @@ class XyzMolecule(IMolecule):
 
         for line in lines:
             # the following line is example of mol2 file
-            #      14 C          -7.1834    9.1696   -1.7595 C.ar      1     ****    0.0000
+            #      14 C          -7.1834    9.1696   -1.7595 C.ar      1     ****    0.0000 # number of molecules
 
             # split line by space
             line_split = line.split()

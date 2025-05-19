@@ -4,11 +4,9 @@ from abc import ABC, abstractmethod
 from typing import override
 
 import numpy as np
-from dataclasses import dataclass
-
+from dataclasses import dataclass, field
 
 def defaut_file_content(name: str) -> str: ...
-
 
 class Calclation(ABC, metaclass=abc.ABCMeta):
     def __init__(self) -> None: ...
@@ -17,7 +15,6 @@ class Calclation(ABC, metaclass=abc.ABCMeta):
     @property
     @abstractmethod
     def name(self) -> str: ...
-
 
 @dataclass(kw_only=True)
 class EM(Calclation):
@@ -35,12 +32,10 @@ class EM(Calclation):
     def name(self) -> str: ...
     def generate(self) -> dict[str, str]: ...
 
-
 class MDType(enum.Enum):
     v_rescale_c_rescale = 1
     nose_hoover_parinello_rahman = 2
     berendsen = 3
-
 
 @dataclass(kw_only=True)
 class MD(Calclation):
@@ -62,12 +57,7 @@ class MD(Calclation):
     def name(self) -> str: ...
     def generate(self) -> dict[str, str]: ...
 
-
 class RuntimeSolvation(Calclation):
-    """
-    solvation (calculate number of molecules at runtime from the cell size)
-    """
-
     solvent: str
     rate: float
     ntry: int
@@ -86,7 +76,6 @@ class RuntimeSolvation(Calclation):
     @override
     @property
     def name(self) -> str: ...
-
     def check(self, cell_size: np.ndarray) -> "RuntimeSolvation":
         """
         print the number of molecules to be added to the cell
@@ -113,7 +102,6 @@ class RuntimeSolvation(Calclation):
 
         return self
 
-
 class Solvation(Calclation):
     """
     solvation
@@ -126,7 +114,6 @@ class Solvation(Calclation):
         nmol: int = 100,
         ntry: int = 300,
     ): ...
-
     @classmethod
     def from_cell_size(
         cls,
@@ -139,17 +126,66 @@ class Solvation(Calclation):
     def name(self) -> str: ...
     def generate(self) -> dict[str, str]: ...
 
+class SolvationSCP216(Calclation):
+    def __init__(self, name: str = "solvation"): ...
+    @override
+    def generate(self) -> dict[str, str]: ...
+    @property
+    @abstractmethod
+    def name(self) -> str: ...
+
+class FileControl(Calclation):
+    def __init__(self, name: str, command: str) -> None: ...
+    @override
+    def generate(self) -> dict[str, str]: ...
+    @classmethod
+    def remove_MCH(cls, name: str) -> "FileControl": ...
+    @classmethod
+    def cell_resizeing(
+        cls, name: str, x: float, y: float, z: float
+    ) -> "FileControl": ...
+
+@dataclass(kw_only=True)
+class BarMethod(Calclation):
+    calculation_name: str
+    nsteps: int = 10000
+
+    # frequency to write the coordinates to the trajectory file
+    nstout: int = 1000
+
+    gen_vel: str = "yes"
+    temperature: float = 300
+    defines: list[str] = field(default_factory=list)
+
+    # maximum number of warnings
+    # (if you dont understand this parameter, Set it to 0!)
+    maxwarn: int = 0
+    useRestraint: bool = False
+    useSemiisotropic: bool = False
+    additional_mdp_parameters: dict[str, str | float] = field(default_factory=dict)
+
+    vdw_lambdas: list[float]
+    coul_lambdas: list[float]
+    bonded_lambdas: list[float]
+    restraint_lambdas: list[float]
+    mass_lambdas: list[float]
+    temperature_lambdas: list[float]
+
+    couple_moltype: str = "System"
+    couple_lamda0: str = "vdw"
+    couple_lamda1: str = "none"
+
+    nstdhdl: int = 100
 
 def copy_file_script(extension: str, destination: str) -> str: ...
 def copy_inherited_files_script(destination: str) -> str: ...
-
 
 class OverwriteType(enum.Enum):
     """
     no : do not overwrite the working directory.
     If the directory already exists, raise an error
     full_overwrite : remove the folder and recreate it
-    add_calculation : add the calculation 
+    add_calculation : add the calculation
     if the calculation folder not exists.
     If the folder exists, skip generating the calculation.
     """
@@ -158,15 +194,12 @@ class OverwriteType(enum.Enum):
     full_overwrite = 1
     add_calculation = 2
 
-
 def launch(
     calculations: list[Calclation],
     input_gro: str,
     working_dir: str,
     overwrite: OverwriteType = OverwriteType.no,
 ): ...
-
-
 def generate_stepbystep_runfile(
     init_structures: list[str],
     calculation_name_and_isparaleljob: tuple[list[str], bool],

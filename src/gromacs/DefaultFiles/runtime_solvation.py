@@ -6,6 +6,7 @@ import os
 import subprocess
 import argparse
 import sys
+from typing import Optional
 
 parser = argparse.ArgumentParser(
     description="Insert molecules into a GROMACS configuration file."
@@ -42,7 +43,9 @@ else:
     raise ValueError("Invalid solvent")
 
 Na = 6.022 * 100  # *10e21 # Avogadro's number
-nmol = int(volume / mass_den * float(argments.rate) * Na)  # number of molecules
+
+# number of molecules
+nmol = int(volume / mass_den * float(argments.rate) * Na)
 
 print("I will fill the cell with", nmol, "molecules")
 
@@ -58,7 +61,7 @@ alias gmx=/short/cfga5932/App/gromacs/bin/gmx_mpi
 gmx insert-molecules -f {input_gro} -ci {solvent_gro} -nmol {nmol} -try {t} -o {output_gro}
 """
 
-proc: subprocess.Popen | None = None
+proc: Optional[subprocess.Popen] = None
 
 if "3.6.8" in sys.version:
     print("It is server")

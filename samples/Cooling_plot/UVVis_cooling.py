@@ -9,7 +9,6 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 def main():
-
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -56,7 +55,9 @@ def main():
     ax.plot(data[0].X, data[0].Y, color="red")  # 高温側を赤色でプロット
     ax.plot(data[-1].X, data[-1].Y, color="blue")  # 低温側を青色でプロット
     ax.set_xlim(250, 450)  # X軸の範囲を指定
-    ax.set_title("Spectra of cooling")  # タイトルを指定
+    ax.set_title("")  # タイトルを指定
+    ax.set_xlabel("Wavelength")  # X軸のラベルを指定
+    ax.set_ylabel("Absorbance")  # Y軸のラベルを指定
     fig.set_size_inches(4, 3)  # グラフのサイズを指定
 
     # # Show plot

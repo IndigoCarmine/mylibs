@@ -20,7 +20,6 @@ class GroAtom(AtomBase):
         residue_number: int,
         coordinate: np.ndarray,
     ) -> None:
-
         self.atom_name = atom_name
         self.residue_name = residue_name
         self.residue_number = residue_number
@@ -51,11 +50,7 @@ class GroAtom(AtomBase):
         y = float(line[28:36])
         z = float(line[36:44])
         return cls(
-            atom_number,
-            atom_name,
-            residue_name,
-            residue_number,
-            np.array([x, y, z])
+            atom_number, atom_name, residue_name, residue_number, np.array([x, y, z])
         )
 
     def __deepcopy__(self, memo) -> "GroAtom":
@@ -135,7 +130,6 @@ class GroFile(IMolecule[GroAtom]):
     # --------------------- XYZ FILE input/output ---------------------
 
     def generate_xyz_text(self) -> list[str]:
-
         def format_float(f: float) -> str:
             return f"{f:12.6f}"
 
@@ -145,8 +139,11 @@ class GroFile(IMolecule[GroAtom]):
         xyz.append(self.title)
         for atom in self.atoms:
             xyz.append(
-                f"{atom.atom_symbol} {format_float(atom.coordinate[0] * NM_TO_ANGSTROM)} {format_float(
-                    atom.coordinate[1] * NM_TO_ANGSTROM)} {format_float(atom.coordinate[2] * NM_TO_ANGSTROM)}"
+                f"{atom.atom_symbol} {
+                    format_float(atom.coordinate[0] * NM_TO_ANGSTROM)
+                } {format_float(atom.coordinate[1] * NM_TO_ANGSTROM)} {
+                    format_float(atom.coordinate[2] * NM_TO_ANGSTROM)
+                }"
             )
         return xyz
 
@@ -188,8 +185,7 @@ class GroFile(IMolecule[GroAtom]):
                     atom = deepcopy(self.atoms[i])
                     atom.index = atom.index + n * len(self.atoms)
                     atom.coordinate = (
-                        np.array([float(line[1]), float(
-                            line[2]), float(line[3])])
+                        np.array([float(line[1]), float(line[2]), float(line[3])])
                         * ANGSTROM_TO_NM
                     )
                     atoms.append(atom)
@@ -239,6 +235,27 @@ class GroFile(IMolecule[GroAtom]):
                 for atom in atoms
             ]
         return gro
+
+    def generate_ndx(self, path: str) -> None:
+        """
+        generate index file for gromacs. It will separate into groups based on residue number
+        """
+        if not path.endswith(".ndx"):
+            path = path + ".ndx"
+
+        with open(path, "w", newline="\n") as f:
+            last_residue = 0
+            line_length = 0
+            for atom in self.atoms:
+                if atom.residue_number != last_residue:
+                    f.write(f"\n\n[ Mol{atom.residue_number} ]\n")
+                    last_residue = atom.residue_number
+                    line_length = 0
+                f.write(f"{atom.index} ")
+                line_length += 1
+                if line_length >= 10:  # Split lines after 10 indices
+                    f.write("\n")
+                    line_length = 0
 
 
 if __name__ == "__main__":

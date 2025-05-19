@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import warnings
-from pydantic.dataclasses import dataclass
+from pydantic.dataclasses import dataclass, Field
 import dataclasses
 import enum
 import os
@@ -12,6 +12,18 @@ import numpy as np
 
 
 def defaut_file_content(name: str) -> str:
+    """
+    Reads the content of a default file from the DefaultFiles directory.
+
+    Args:
+        name (str): The name of the file to read.
+
+    Returns:
+        str: The content of the file as a string.
+
+    Raises:
+        FileNotFoundError: If the DefaultFiles directory does not exist or the file is not found.
+    """
     DefaultFile_dir = os.path.join(os.path.dirname(__file__), "DefaultFiles")
     if not os.path.exists(DefaultFile_dir):
         raise FileNotFoundError("DefaultFiles directory not found")
@@ -25,8 +37,7 @@ class Calclation(ABC):
 
     @abstractmethod
     def generate(self) -> dict[str, str]:
-        Exception("This method must be implemented. " +
-                  "Abstract method was called")
+        Exception("This method must be implemented. " + "Abstract method was called")
         """
         dict[str,str] : key is the name of the file,
         value is the content of the file
@@ -42,7 +53,18 @@ class Calclation(ABC):
 @dataclass(kw_only=True)
 class EM(Calclation):
     """
-    energy minimization
+    Class representing an energy minimization (EM) calculation.
+    Attributes:
+        nsteps (int): Number of steps for the energy minimization. Default is 3000.
+        emtol (float): Energy minimization tolerance. Default is 300.
+        calculation_name (str): Name of the calculation. Default is "em".
+        defines (list[str]): List of defines for the calculation. Default is an empty list.
+        maxwarn (int): Maximum number of warnings allowed. Default is 0.
+        useRestraint (bool): Flag to indicate if restraints should be used. Default is False.
+    Properties:
+        name (str): Returns the name of the calculation.
+    Methods:
+        generate() -> dict[str, str]: Generates the necessary files for the energy minimization calculation.
     """
 
     nsteps: int = 3000
@@ -84,8 +106,7 @@ class EM(Calclation):
                 .add_or_update("nsteps", self.nsteps)
                 .add_or_update("emtol", self.emtol)
                 .add_or_update(
-                    "define", " ".join(
-                        ["-D" + define for define in self.defines])
+                    "define", " ".join(["-D" + define for define in self.defines])
                 )
                 .export(),
                 "grommp.sh": defaut_file_content("grommp.sh").format(
@@ -105,7 +126,37 @@ class MDType(enum.Enum):
 @dataclass(kw_only=True)
 class MD(Calclation):
     """
-    molecular dynamics
+    A class to represent a Molecular Dynamics (MD) calculation.
+    Attributes:
+    ----------
+    type : MDType
+        The type of MD calculation.
+    calculation_name : str
+        The name of the calculation.
+    nsteps : int, optional
+        Number of steps for the MD simulation (default is 10000).
+    nstout : int, optional
+        Frequency to write the coordinates to the trajectory file (default is 1000).
+    gen_vel : str, optional
+        Whether to generate velocities ("yes" or "no") (default is "yes").
+    temperature : float, optional
+        Temperature for the simulation (default is 300).
+    defines : list[str], optional
+        List of defines for the MD parameters (default is an empty list).
+    maxwarn : int, optional
+        Maximum number of warnings (default is 0).
+    useRestraint : bool, optional
+        Whether to use restraints (default is False).
+    useSemiisotropic : bool, optional
+        Whether to use semiisotropic pressure coupling (default is False).
+    additional_mdp_parameters : dict[str, str | float], optional
+        Additional parameters for the MD simulation (default is an empty dictionary).
+    Methods:
+    --------
+    name() -> str:
+        Returns the name of the calculation.
+    generate() -> dict[str, str]:
+        Generates the necessary files for the MD calculation based on the type.
     """
 
     type: MDType
@@ -121,10 +172,7 @@ class MD(Calclation):
 
     # maximum number of warnings
     # (if you dont understand this parameter, Set it to 0!)
-    maxwarn: int = (
-
-        0
-    )
+    maxwarn: int = 0
     useRestraint: bool = False
     useSemiisotropic: bool = False
     additional_mdp_parameters: dict[str, str | float] = dataclasses.field(
@@ -178,19 +226,16 @@ class MD(Calclation):
                     mdp_file.add_or_update("refcoord_scaling", "all")
                 if len(self.defines) != 0:
                     mdp_file.add_or_update(
-                        "define", " ".join(
-                            ["-D" + define for define in self.defines])
+                        "define", " ".join(["-D" + define for define in self.defines])
                     )
                 if self.useSemiisotropic:
                     mdp_file.add_or_update("pcoupltype", "semiisotropic")
                     mdp_file.add_or_update(
-                        "ref_p", " ".join([mdp_file.get("ref_p")
-                                          for _ in range(2)])
+                        "ref_p", " ".join([mdp_file.get("ref_p") for _ in range(2)])
                     )
                     mdp_file.add_or_update(
                         "compressibility",
-                        " ".join([mdp_file.get("compressibility")
-                                 for _ in range(2)]),
+                        " ".join([mdp_file.get("compressibility") for _ in range(2)]),
                     )
 
                 return {
@@ -204,8 +249,7 @@ class MD(Calclation):
                 }
 
             case MDType.nose_hoover_parinello_rahman:
-                raise NotImplementedError(
-                    "parrameters are not linked to the mdp file")
+                raise NotImplementedError("parameters are not linked to the mdp file")
                 return {
                     "setting.mdp": defaut_file_content(
                         "nose_hoover_parinello_rahman.mdp"
@@ -218,8 +262,7 @@ class MD(Calclation):
                     "ovito.sh": defaut_file_content("ovito.sh"),
                 }
             case MDType.berendsen:
-                raise NotImplementedError(
-                    "parrameters are not linked to the mdp file")
+                raise NotImplementedError("parameters are not linked to the mdp file")
                 return {
                     "setting.mdp": defaut_file_content("berendsen.mdp"),
                     "grommp.sh": defaut_file_content("grommp.sh").format(
@@ -233,7 +276,23 @@ class MD(Calclation):
 
 class RuntimeSolvation(Calclation):
     """
-    solvation (calculate number of molecules at runtime from the cell size)
+    A class to represent a runtime solvation calculation.
+    (runtime solvation is original keyword in the library
+    and is for inserting the solvent into the cell)
+    Attributes:
+        solvent (str): The type of solvent used in the calculation.
+        rate (float): The rate of solvation.
+        ntry (int): The number of attempts for solvation.
+        calculation_name (str): The name of the calculation.
+    Methods:
+        __init__(solvent: str = "MCH", name: str = "solvation", rate: float = 1.0, ntry: int = 300):
+            Initializes the RuntimeSolvation object with the given parameters.
+        generate() -> dict[str, str]:
+            Generates the necessary files for the solvation calculation.
+        name() -> str:
+            Returns the name of the calculation.
+        check(cell_size: np.ndarray) -> "RuntimeSolvation":
+            Prints the number of molecules to be added to the cell and the number of atoms.
     """
 
     solvent: str
@@ -252,6 +311,8 @@ class RuntimeSolvation(Calclation):
         match solvent:
             case "MCH":
                 self.solvent = "MCH"
+            case "H2O":
+                raise ValueError("H2O should be used spc216.gro (SolvateSCP216 class)")
             case _:
                 raise ValueError("Invalid solvent")
 
@@ -305,10 +366,6 @@ class RuntimeSolvation(Calclation):
 
 
 class Solvation(Calclation):
-    """
-    solvation
-    """
-
     def __init__(
         self,
         solvent: str = "MCH",
@@ -378,6 +435,179 @@ class Solvation(Calclation):
         }
 
 
+class SolvationSCP216(Calclation):
+    """
+    A class to represent a solvation calculation using the SPC216 water model.
+    Attributes:
+        name (str): The name of the calculation.
+    """
+
+    def __init__(self, name: str = "solvation"):
+        self.calculation_name = name
+
+    @override
+    def generate(self) -> dict[str, str]:
+        return {
+            "grommp.sh": "echo 'this is a dummy file for automation'",
+            "mdrun.sh": _gmx_alias
+            + "\n\n\n"
+            + "gmx solvate -cp input.gro -cs spc216.gro -o output.gro -p topo.top",
+        }
+
+    @property
+    @override
+    def name(self) -> str:
+        return self.calculation_name
+
+
+_gmx_alias = """
+# for supporting all gmx (gmx_d, gmx_mpi, gmx) commands
+# Enable alias expansion
+shopt -s expand_aliases
+if command -v gmx_d &> /dev/null
+then
+    alias inner_gmx=gmx_d
+elif command -v gmx_mpi &> /dev/null
+then
+    alias inner_gmx=gmx_mpi
+elif command -v gmx &> /dev/null
+then
+    alias inner_gmx=gmx
+else
+    echo "No gromacs installation found."
+    exit 1
+fi
+# end of alias support
+
+
+"""
+
+
+class FileControl(Calclation):
+    def __init__(self, name: str, command: str):
+        self.calclation_name = name
+        self.command = command
+
+    @override
+    def generate(self) -> dict[str, str]:
+        command = _gmx_alias + self.command
+        return {
+            "grommp.sh": 'echo "this is a dummy file for automation"',
+            "mdrun.sh": command,
+        }
+
+    @override
+    @property
+    def name(self) -> str:
+        return self.calclation_name
+
+    @classmethod
+    def remove_MCH(cls, name: str):
+        commands = []
+        commands.append(
+            "{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndx"
+        )
+        commands.append(
+            "echo '!MCH' | inner_gmx trjconv -f input.gro -s input.gro -o output.gro -n withoutMCH.ndx"
+        )
+
+        # remove MCH from the topology file
+        commands.append("sed -i '/MCH/d' topol.top")
+        # remove lines
+        return cls(name, "\n".join(commands))
+
+    @classmethod
+    def cell_resizeing(cls, name: str, x: float, y: float, z: float):
+        commands = []
+        commands.append(
+            "{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndx"
+        )
+        commands.append(
+            "echo '!MCH' | inner_gmx trjconv -f input.gro -s input.gro -o output.gro -n withoutMCH.ndx"
+        )
+
+        # remove MCH from the topology file
+        commands.append("sed -i '/MCH/d' topo.top")
+
+        # resize the cell
+        commands.append(
+            "echo 1 | inner_gmx editconf -f output.gro -o output.gro -box {x} {y} {z}".format(
+                x=x, y=y, z=z
+            )
+        )
+        # remove lines
+        return cls(name, "\n".join(commands))
+
+
+@dataclass(kw_only=True)
+class BarMethod(Calclation):
+    type: MDType
+    calculation_name: str
+    nsteps: int = 10000
+
+    # frequency to write the coordinates to the trajectory file
+    nstout: int = 1000
+
+    gen_vel: str = "yes"
+    temperature: float = 300
+    defines: list[str] = Field(default_factory=list)
+
+    # maximum number of warnings
+    # (if you dont understand this parameter, Set it to 0!)
+    maxwarn: int = 0
+    useRestraint: bool = False
+    useSemiisotropic: bool = False
+    additional_mdp_parameters: dict[str, str | float] = Field(default_factory=dict)
+
+    vdw_lambdas: list[float]
+    coul_lambdas: list[float]
+    bonded_lambdas: list[float]
+    restraint_lambdas: list[float]
+    mass_lambdas: list[float]
+    temperature_lambdas: list[float]
+
+    couple_moltype: str = "System"
+    couple_lamda0: str = "vdw"
+    couple_lamda1: str = "none"
+
+    nstdhdl: int = 100
+
+    def __post_init__(self):
+        print(
+            "time span of the MD ",
+            self.calculation_name,
+            " is",
+            self.nsteps * 0.002,
+            "ps or",
+            self.nsteps * 0.002 / 1000,
+            "ns.",
+        )
+
+        # input validation
+        if self.gen_vel not in ["yes", "no"]:
+            raise ValueError("Invalid gen_vel value")
+        if self.temperature < 0:
+            raise ValueError("Invalid temperature value")
+
+        if self.maxwarn != 0:
+            warnings.warn("maxwarn is not 0. Do you know what you are doing?")
+
+        nlambdas = len(self.vdw_lambdas)
+        if nlambdas == 0:
+            raise ValueError("vdw_lambdas is empty")
+
+        if len(self.coul_lambdas) != nlambdas:
+            raise ValueError("coul_lambdas is not same length as vdw_lambdas")
+        if len(self.bonded_lambdas) != nlambdas:
+            raise ValueError("bonded_lambdas is not same length as vdw_lambdas")
+        if len(self.restraint_lambdas) != nlambdas:
+            raise ValueError("restraint_lambdas is not same length as vdw_lambdas")
+        if len(self.mass_lambdas) != nlambdas:
+            raise ValueError("mass_lambdas is not same length as vdw_lambdas")
+        if len(self.temperature_lambdas) != nlambdas:
+            raise ValueError("temperature_lambdas is not same length as vdw_lambdas")
+
+
 def copy_file_script(extension: str, destination: str) -> str:
     return f"cp *.{extension} ../{destination}"
 
@@ -424,8 +654,7 @@ def launch(
         if os.path.exists(os.path.join(dirname)):
             match overwrite:
                 case OverwriteType.no:
-                    raise ValueError(
-                        "Working directory already exists", dirname)
+                    raise ValueError("Working directory already exists", dirname)
                 case OverwriteType.full_overwrite:
                     # remove the folder and its content
                     for file in os.listdir(dirname):
@@ -462,12 +691,11 @@ def launch(
                 )
             )
             f.write(f"\necho {calculation.name} is done")
-            f.write(f"\necho Next calculation is {calculations[i+1].name}")
+            f.write(f"\necho Next calculation is {calculations[i + 1].name}")
 
     # copy input file to the first calculation
     shutil.copy2(
-        input_gro, os.path.join(
-            working_dir, "0_" + calculations[0].name, "input.gro")
+        input_gro, os.path.join(working_dir, "0_" + calculations[0].name, "input.gro")
     )
 
     # create a script to all the calculations
@@ -488,12 +716,9 @@ def generate_stepbystep_runfile(
     calculation_name_and_isparaleljob: tuple[list[str], bool],
     calc_path: str,
 ):
-
     for calculation_name, do_paralel in calculation_name_and_isparaleljob:
         with open(
-            os.path.join(calc_path, f"{calculation_name}.sh"),
-            "w",
-            newline="\n"
+            os.path.join(calc_path, f"{calculation_name}.sh"), "w", newline="\n"
         ) as f:
             if do_paralel:
                 f.write("echo 'Starting paralel job'\n")
@@ -512,6 +737,40 @@ def generate_stepbystep_runfile(
     with open(os.path.join(calc_path, "stebystep.sh"), "w", newline="\n") as f:
         for calculation_name, _ in calculation_name_and_isparaleljob:
             f.write(f"bash {calculation_name}.sh\n")
+            f.write("\n")
+
+        f.write("echo All calculations are done")
+
+
+def generate_batch_execution_script(
+    init_name: list[str],
+    base_dir: str,
+    calc_path: str | None = None,
+    command: str = "bash run.sh",
+) -> None:
+    """
+    Args:
+        init_name (list[str]): list of initial structure names. This is child directory of base_dir
+        base_dir (str): base directory
+        calc_path (str | None): calculation directory name. (4_md_main, 4_md, ...) If None, command will run in the initial structure directory
+        command (str): command to run t he calculation
+
+    """
+    with open(os.path.join(base_dir, "run.sh"), "w", newline="\n") as f:
+        for i, file in enumerate(init_name):
+            f.write(f"cd {os.path.basename(file).split('.')[0]}\n")
+
+            if calc_path is not None:
+                f.write(f"cd {calc_path}\n")
+
+            f.write(command + "\n")
+
+            if calc_path is not None:
+                f.write("cd ..\n")
+
+            f.write("cd ..\n")
+            f.write("\n")
+            f.write("\n")
             f.write("\n")
 
         f.write("echo All calculations are done")
