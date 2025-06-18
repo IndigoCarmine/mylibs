@@ -1,15 +1,28 @@
 from matplotlib import pyplot as plt
 import numpy as np
+import numpy.typing as npt
 import lmfit as lf
 import base_utils.plotlib as pl
 
 
-def isodesmic(X, K):
+def isodesmic(X: np.number | npt.NDArray[np.number], K: np.number | float | int):
+    """
+    X: concentration of monomer (UV/Vis absorbance)
+    K: equilibrium constant
+    return: fraction of monomer
+    """
     B = K * X
     return (2 * B + 1 - (4 * B + 1) ** 0.5) / (2 * B)
 
 
 def cubic(b, c, d):
+    """
+    b, c, d: coefficients of the cubic equation
+
+    x^3 + bx^2 + cx + d = 0
+
+    return: roots of the cubic equation
+    """
     p = (3 * c - b**2) / 3
     q = (2 * b**3 - 9 * b * c + 27 * d) / 27
     dit = 27 * q**2 + 4 * p**3
@@ -25,7 +38,12 @@ def cubic(b, c, d):
     return x.real
 
 
-def cooperative(Conc, K, sigma, scaler=1) -> np.ndarray:
+def cooperative(
+    Conc: float | npt.NDArray[np.number],
+    K: float | np.number,
+    sigma: float | np.number,
+    scaler: float | np.number = 1,
+) -> float | npt.NDArray[np.number]:
     """
     Conc: total concentration of substrate
     K: equilibrium constant
