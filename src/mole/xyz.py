@@ -77,8 +77,7 @@ class XyzMolecule(IMolecule):
         return cls(
             "molecule",
             0,
-            [XyzAtom(atom.symbol, atom.index, atom.coordinate)
-             for atom in atoms],
+            [XyzAtom(atom.symbol, atom.index, atom.coordinate) for atom in atoms],
         )
 
     @staticmethod
@@ -125,8 +124,7 @@ class XyzMolecule(IMolecule):
         lines = [line for line in lines if line != ""]
         lines2 = [line.split() for line in lines]
         for line in lines2:
-            atom_list.append(
-                XyzAtom(line[0], 0, np.array(line[1:4], dtype=float)))
+            atom_list.append(XyzAtom(line[0], 0, np.array(line[1:4], dtype=float)))
 
         return cls(name, 0, atom_list)
 
@@ -143,7 +141,7 @@ class XyzMolecule(IMolecule):
         # find @<TRIPOS>ATOM line and @... line after that
         for i, line in enumerate(lines):
             if line.strip() == "@<TRIPOS>ATOM":
-                lines = lines[i + 1:]
+                lines = lines[i + 1 :]
                 break
         for i, line in enumerate(lines):
             if line.strip()[0] == "@":
@@ -168,6 +166,18 @@ class XyzMolecule(IMolecule):
             # remove atom index from atom name
             atom.symbol = "".join([c for c in atom.symbol if not c.isdigit()])
         return cls(name, 0, atom_list)
+
+    def save_xyz_text(self) -> str:
+        # apply rotation and translation to atoms
+        mol = copy.deepcopy(self)
+        xyz_text = []
+        xyz_text.append(str(self.children.__len__()))
+        xyz_text.append(self.name)
+        for atom in mol.children:
+            xyz_text.append(
+                atom.symbol + " " + " ".join([format_float(s) for s in atom.coordinate])
+            )
+        return "\n".join(xyz_text)
 
     def save_xyz(self, filename: str | None = None):
         """
@@ -222,7 +232,6 @@ class XyzMolecule(IMolecule):
 
 
 class XyzSubstructure(Substructure):
-
     def __init__(self, elements: list[XyzMolecule], name: str):
         self.molecules: list[XyzMolecule] = elements
         self.name = name
@@ -231,8 +240,7 @@ class XyzSubstructure(Substructure):
     def from_Substructure(cls, sub: Substructure):
         children: list[XyzMolecule] = sub.get_children()
         return cls(
-            [XyzMolecule.make_from(mol, mol.name, mol.index)
-             for mol in children], ""
+            [XyzMolecule.make_from(mol, mol.name, mol.index) for mol in children], ""
         )
 
     def extract_xyz(self, filename: str) -> None:
@@ -244,8 +252,7 @@ class XyzSubstructure(Substructure):
 
         # write number of atoms (first line)
         f.write(
-            str(sum([molecule.sizeofAtoms()
-                for molecule in temp_agg.molecules])) + "\n"
+            str(sum([molecule.sizeofAtoms() for molecule in temp_agg.molecules])) + "\n"
         )
         f.write("\n")
         for molecule in temp_agg.molecules:

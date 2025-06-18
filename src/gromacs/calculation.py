@@ -376,6 +376,8 @@ class Solvation(Calclation):
         match solvent:
             case "MCH":
                 self.solvent = "MCH"
+            case "H2O":
+                raise ValueError("H2O should be used spc216.gro (SolvateSCP216 class)")
             case _:
                 raise ValueError("Invalid solvent")
 

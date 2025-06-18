@@ -1,9 +1,25 @@
 import os
 from typing import Iterable, Callable
+from warnings import warn
 from base_utils.typecheck import type_check
 
 
 # basic pipeline functions #
+
+
+def deprecated(message: str):
+    """
+    Decorator to mark a function as deprecated.
+    """
+
+    def decorator(func: Callable):
+        def wrapper(*args, **kwargs):
+            warn(f"{func.__name__} is deprecated: {message}", DeprecationWarning)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 @type_check
@@ -27,6 +43,7 @@ def join(funcs: list[Callable]) -> Callable:
 
 
 @type_check
+@deprecated("Use numpy flatten instead")
 def flatten(data: Iterable[Iterable | object]) -> list:
     """
     Flatten nested list
@@ -75,8 +92,7 @@ def find_all_file_by_prefix(path: str, prefix: str) -> list[str]:
     """
 
     all_files = find_all_file(path)
-    return [file for file in all_files
-            if os.path.basename(file).startswith(prefix)]
+    return [file for file in all_files if os.path.basename(file).startswith(prefix)]
 
 
 @type_check

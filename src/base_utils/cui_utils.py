@@ -14,7 +14,7 @@ def input_path(message: str = "Enter a file name: ") -> str:
 def format_return_char(string: str) -> str:
     """
     Format return character.
-    all return characters are replaced with \n
+    all return characters are replaced with \\n
     """
     return string.replace("\r\n", "\n").replace("\r", "\n")
 

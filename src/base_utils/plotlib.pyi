@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Optional
 from matplotlib.axes import Axes
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from pydantic.dataclasses import dataclass  # type: ignore
 
@@ -47,8 +48,8 @@ class DataLabels:
 
 @dataclass(frozen=True)
 class XYData:
-    X: np.ndarray
-    Y: np.ndarray
+    X: npt.NDArray[np.number]
+    Y: npt.NDArray[np.number]
     dataLabel: DataLabel
     Title: str = ...
     def rename_labels(self, label: DataLabel) -> "XYData": ...
@@ -141,3 +142,4 @@ def for_black_background(ax: Axes) -> None: ...
 def slice_data(
     data: list[XYData], x_value: float, new_x_values: list[float]
 ) -> XYData: ...
+def remove_all_text(ax: Axes) -> None: ...
