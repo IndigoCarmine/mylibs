@@ -7,6 +7,7 @@ from math import isnan
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from matplotlib.axes import Axes
 from typing_extensions import deprecated
@@ -130,10 +131,18 @@ class DataLabels(Enum):
 
 @dataclass(frozen=True)
 class XYData:
-    X: np.ndarray
-    Y: np.ndarray
+    X: npt.NDArray[np.number]
+    Y: npt.NDArray[np.number]
     dataLabel: DataLabel
     Title: str = ""
+
+    def __post_init__(self):
+        if len(self.X) != len(self.Y):
+            raise ValueError(
+                f"X and Y must have the same length: {len(self.X)} != {len(self.Y)}"
+            )
+        if len(self.X) == 0:
+            raise ValueError("X and Y must not be empty")
 
     def rename_labels(self, label: DataLabel) -> "XYData":
         return XYData(self.X, self.Y, label, self.Title)
@@ -492,3 +501,11 @@ def for_black_background(ax: Axes) -> None:
     ax.tick_params(axis="x", colors="white", which="both")
     ax.tick_params(axis="y", colors="white", which="both")
     ax.title.set_color("white")
+
+
+@typecheck.type_check
+def remove_all_text(ax: Axes) -> None:
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.set_title("")
+    ax.legend().remove()
