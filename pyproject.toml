@@ -11,10 +11,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-dependencies = ["pydantic", "numpy", "pandas", "matplotlib", "scipy"]
+dependencies = ["pydantic", "numpy", "pandas", "matplotlib", "scipy", "annotated-types", "pydantic-settings", "pydantic-core", "python-dotenv", "typing_extensions", "pyparsing"]
+
 
 [project.optional-dependencies]
-dev = ["build", "twine", 'mypy']
-
+dev = ["build", "twine", "mypy"]
 [project.urls]
 "Homepage" = "https://chem.tf.chiba-u.jp/yagai/index.html"
