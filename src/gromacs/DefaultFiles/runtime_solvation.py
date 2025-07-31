@@ -1,3 +1,9 @@
+"""
+This script inserts solvent molecules into a GROMACS configuration file (GRO).
+It calculates the number of molecules to insert based on cell volume and solvent density,
+then executes the GROMACS `insert-molecules` command.
+Finally, it modifies the topology file to include the inserted solvent.
+"""
 # NOW IT S FOR ONLY MCH!!!!!!!!!!!
 
 # for python 3.6.8 (it is server version)

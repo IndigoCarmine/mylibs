@@ -1,3 +1,8 @@
+"""
+This module defines abstract and concrete classes for setting up and managing GROMACS simulations.
+It includes functionalities for energy minimization (EM), molecular dynamics (MD),
+solvation, and file control operations, along with utilities for generating simulation scripts.
+"""
 from abc import ABC, abstractmethod
 import warnings
 from pydantic.dataclasses import dataclass, Field
@@ -32,21 +37,29 @@ def defaut_file_content(name: str) -> str:
 
 
 class Calclation(ABC):
+    """
+    Abstract base class for all GROMACS calculation types.
+    Defines the interface for generating calculation files and retrieving the calculation name.
+    """
     def __init__(self):
         raise Exception("Abstract class cannot be instantiated")
 
     @abstractmethod
     def generate(self) -> dict[str, str]:
+        """
+        Generates the necessary files for the calculation.
+        Returns:
+            dict[str, str]: A dictionary where keys are file names and values are file contents.
+        """
         Exception("This method must be implemented. " + "Abstract method was called")
-        """
-        dict[str,str] : key is the name of the file,
-        value is the content of the file
-        """
         return {}
 
     @property
     @abstractmethod
     def name(self) -> str:
+        """
+        Returns the name of the calculation.
+        """
         pass
 
 
@@ -118,6 +131,9 @@ class EM(Calclation):
 
 
 class MDType(enum.Enum):
+    """
+    Defines different types of Molecular Dynamics (MD) simulations.
+    """
     v_rescale_c_rescale = 1
     nose_hoover_parinello_rahman = 2
     berendsen = 3
@@ -180,6 +196,10 @@ class MD(Calclation):
     )
 
     def __post_init__(self):
+        """
+        Initializes the MD object and performs input validation.
+        Prints the estimated time span of the MD simulation.
+        """
         print(
             "time span of the MD ",
             self.calculation_name,
@@ -205,6 +225,13 @@ class MD(Calclation):
 
     @override
     def generate(self) -> dict[str, str]:
+        """
+        Generates the necessary files for the MD calculation based on the specified MDType.
+        Returns:
+            dict[str, str]: A dictionary where keys are file names and values are file contents.
+        Raises:
+            NotImplementedError: If the selected MDType is not yet implemented.
+        """
         match self.type:
             case MDType.v_rescale_c_rescale:
                 options_txt = " -maxwarn " + str(self.maxwarn)
@@ -308,6 +335,16 @@ class RuntimeSolvation(Calclation):
         rate: float = 1.0,
         ntry: int = 300,
     ):
+        """
+        Initializes the RuntimeSolvation object with the given parameters.
+        Args:
+            solvent (str): The type of solvent (e.g., "MCH").
+            name (str): The name of the calculation.
+            rate (float): The rate of solvation.
+            ntry (int): The number of attempts for solvation.
+        Raises:
+            ValueError: If an invalid solvent is specified.
+        """
         match solvent:
             case "MCH":
                 self.solvent = "MCH"
@@ -322,6 +359,11 @@ class RuntimeSolvation(Calclation):
 
     @override
     def generate(self) -> dict[str, str]:
+        """
+        Generates the necessary files for the runtime solvation calculation.
+        Returns:
+            dict[str, str]: A dictionary where keys are file names and values are file contents.
+        """
         return {
             "mdrun.sh": defaut_file_content("runtime_solvation.sh")
             .replace("SOLVENT", self.solvent)
@@ -340,7 +382,13 @@ class RuntimeSolvation(Calclation):
 
     def check(self, cell_size: np.ndarray) -> "RuntimeSolvation":
         """
-        print the number of molecules to be added to the cell
+        Prints the number of molecules to be added to the cell and the number of atoms.
+        Args:
+            cell_size (np.ndarray): The dimensions of the simulation cell.
+        Returns:
+            RuntimeSolvation: The current instance of RuntimeSolvation.
+        Raises:
+            ValueError: If an invalid solvent is specified.
         """
         volume = np.prod(cell_size)  # nm^3
 
@@ -366,6 +414,9 @@ class RuntimeSolvation(Calclation):
 
 
 class Solvation(Calclation):
+    """
+    A class to represent a solvation calculation, allowing control over the number of solvent molecules.
+    """
     def __init__(
         self,
         solvent: str = "MCH",
@@ -373,6 +424,16 @@ class Solvation(Calclation):
         nmol: int = 100,
         ntry: int = 300,
     ):
+        """
+        Initializes the Solvation object.
+        Args:
+            solvent (str): The type of solvent (e.g., "MCH").
+            name (str): The name of the calculation.
+            nmol (int): The number of solvent molecules to add.
+            ntry (int): The number of attempts for solvation.
+        Raises:
+            ValueError: If an invalid solvent is specified.
+        """
         match solvent:
             case "MCH":
                 self.solvent = "MCH"
@@ -394,10 +455,17 @@ class Solvation(Calclation):
         rate: float = 1.0,
     ):
         """
-        try to fill the cell with the solvent as much as density of the solvent
-        rate : the rate of the solvent filling in the cell
-        (when 1.0, the cell is filled with the solvent
-        as much as the density of the solvent.)
+        Creates a Solvation instance by calculating the number of solvent molecules
+        needed to fill a given cell size at a specified rate.
+        Args:
+            cell_size (np.ndarray): The dimensions of the simulation cell.
+            name (str): The name of the calculation.
+            solvent (str): The type of solvent.
+            rate (float): The rate of solvent filling (1.0 means filled to density).
+        Returns:
+            Solvation: A new Solvation object.
+        Raises:
+            ValueError: If an invalid solvent is specified.
         """
         volume = np.prod(cell_size)  # nm^3
         print("The volume of the cell is", volume, "nm^3")
@@ -425,6 +493,11 @@ class Solvation(Calclation):
 
     @override
     def generate(self) -> dict[str, str]:
+        """
+        Generates the necessary files for the solvation calculation.
+        Returns:
+            dict[str, str]: A dictionary where keys are file names and values are file contents.
+        """
         return {
             "mdrun.sh": defaut_file_content("solvation.sh")
             .replace("SOLVENT", self.solvent)
@@ -445,10 +518,20 @@ class SolvationSCP216(Calclation):
     """
 
     def __init__(self, name: str = "solvation"):
+        """
+        Initializes the SolvationSCP216 object.
+        Args:
+            name (str): The name of the calculation.
+        """
         self.calculation_name = name
 
     @override
     def generate(self) -> dict[str, str]:
+        """
+        Generates the necessary files for the SPC216 solvation calculation.
+        Returns:
+            dict[str, str]: A dictionary where keys are file names and values are file contents.
+        """
         return {
             "grommp.sh": "echo 'this is a dummy file for automation'",
             "mdrun.sh": _gmx_alias
@@ -486,12 +569,27 @@ fi
 
 
 class FileControl(Calclation):
+    """
+    A class for performing file manipulation operations within GROMACS workflows.
+    It allows defining custom shell commands to be executed.
+    """
     def __init__(self, name: str, command: str):
+        """
+        Initializes the FileControl object.
+        Args:
+            name (str): The name of the file control operation.
+            command (str): The shell command to execute.
+        """
         self.calclation_name = name
         self.command = command
 
     @override
     def generate(self) -> dict[str, str]:
+        """
+        Generates the necessary files for the file control operation.
+        Returns:
+            dict[str, str]: A dictionary where keys are file names and values are file contents.
+        """
         command = _gmx_alias + self.command
         return {
             "grommp.sh": 'echo "this is a dummy file for automation"',
@@ -505,9 +603,16 @@ class FileControl(Calclation):
 
     @classmethod
     def remove_MCH(cls, name: str):
+        """
+        Creates a FileControl instance to remove MCH molecules from a GROMACS system.
+        Args:
+            name (str): The name of the removal operation.
+        Returns:
+            FileControl: A FileControl object configured for MCH removal.
+        """
         commands = []
         commands.append(
-            "{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndx"
+            "{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndn"
         )
         commands.append(
             "echo '!MCH' | inner_gmx trjconv -f input.gro -s input.gro -o output.gro -n withoutMCH.ndx"
@@ -520,6 +625,16 @@ class FileControl(Calclation):
 
     @classmethod
     def cell_resizeing(cls, name: str, x: float, y: float, z: float):
+        """
+        Creates a FileControl instance to resize the simulation cell.
+        Args:
+            name (str): The name of the cell resizing operation.
+            x (float): New X dimension of the cell.
+            y (float): New Y dimension of the cell.
+            z (float): New Z dimension of the cell.
+        Returns:
+            FileControl: A FileControl object configured for cell resizing.
+        """
         commands = []
         commands.append(
             "{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndx"
@@ -541,8 +656,34 @@ class FileControl(Calclation):
         return cls(name, "\n".join(commands))
 
 
+
 @dataclass(kw_only=True)
 class BarMethod(Calclation):
+    """
+    A class to represent a Free Energy Perturbation (FEP) calculation using the BAR method.
+    Attributes:
+        type (MDType): The type of MD calculation.
+        calculation_name (str): The name of the calculation.
+        nsteps (int): Number of steps for the MD simulation.
+        nstout (int): Frequency to write coordinates to the trajectory file.
+        gen_vel (str): Whether to generate velocities.
+        temperature (float): Temperature for the simulation.
+        defines (list[str]): List of defines for the MD parameters.
+        maxwarn (int): Maximum number of warnings.
+        useRestraint (bool): Whether to use restraints.
+        useSemiisotropic (bool): Whether to use semiisotropic pressure coupling.
+        additional_mdp_parameters (dict[str, str | float]): Additional parameters for the MD simulation.
+        vdw_lambdas (list[float]): List of lambda values for van der Waals interactions.
+        coul_lambdas (list[float]): List of lambda values for Coulombic interactions.
+        bonded_lambdas (list[float]): List of lambda values for bonded interactions.
+        restraint_lambdas (list[float]): List of lambda values for restraints.
+        mass_lambdas (list[float]): List of lambda values for mass.
+        temperature_lambdas (list[float]): List of lambda values for temperature.
+        couple_moltype (str): Molecule type to couple.
+        couple_lamda0 (str): Lambda state 0 coupling type.
+        couple_lamda1 (str): Lambda state 1 coupling type.
+        nstdhdl (int): Frequency to write dH/dL to the energy file.
+    """
     type: MDType
     calculation_name: str
     nsteps: int = 10000
@@ -575,6 +716,11 @@ class BarMethod(Calclation):
     nstdhdl: int = 100
 
     def __post_init__(self):
+        """
+        Initializes the BarMethod object and performs input validation.
+        Prints the estimated time span of the MD simulation.
+        Raises ValueError if input parameters are invalid.
+        """
         print(
             "time span of the MD ",
             self.calculation_name,
@@ -611,10 +757,25 @@ class BarMethod(Calclation):
 
 
 def copy_file_script(extension: str, destination: str) -> str:
+    """
+    Generates a bash command to copy files with a specific extension to a destination directory.
+    Args:
+        extension (str): The file extension (e.g., "top", "itp").
+        destination (str): The destination directory.
+    Returns:
+        str: The bash copy command.
+    """
     return f"cp *.{extension} ../{destination}"
 
 
 def copy_inherited_files_script(destination: str) -> str:
+    """
+    Generates a bash script to copy inherited GROMACS files (topology, itp, gro) to a new calculation directory.
+    Args:
+        destination (str): The destination directory for the copied files.
+    Returns:
+        str: The bash script content.
+    """
     scripts = [
         copy_file_script("top", destination),
         copy_file_script("itp", destination),
@@ -625,12 +786,10 @@ def copy_inherited_files_script(destination: str) -> str:
 
 class OverwriteType(enum.Enum):
     """
-    no : do not overwrite the working directory.
-    If the directory already exists, raise an error
-    full_overwrite : remove the folder and recreate it
-    add_calculation : add the calculation
-    if the calculation folder not exists.
-    If the folder exists, skip generating the calculation.
+    Defines strategies for handling existing working directories during calculation setup.
+    - `no`: Do not overwrite; raise an error if the directory exists.
+    - `full_overwrite`: Remove the existing directory and recreate it.
+    - `add_calculation`: Add the calculation if the folder does not exist; skip if it does.
     """
 
     no = 0
@@ -644,6 +803,17 @@ def launch(
     working_dir: str,
     overwrite: OverwriteType = OverwriteType.no,
 ):
+    """
+    Launches a series of GROMACS calculations.
+    Creates working directories, generates necessary files, and sets up run scripts.
+    Args:
+        calculations (list[Calclation]): A list of Calclation objects to run.
+        input_gro (str): The path to the initial input .gro file.
+        working_dir (str): The base directory where calculation folders will be created.
+        overwrite (OverwriteType): The strategy for handling existing working directories.
+    Raises:
+        ValueError: If duplicate calculation names are found or if a directory exists and overwrite is set to `no`.
+    """
     names = [calculation.name for calculation in calculations]
     # check if there are any duplicate names
     if len(names) != len(set(names)):
@@ -718,6 +888,15 @@ def generate_stepbystep_runfile(
     calculation_name_and_isparaleljob: tuple[list[str], bool],
     calc_path: str,
 ):
+    """
+    Generates step-by-step run scripts for a series of calculations,
+    optionally supporting parallel execution.
+    Args:
+        init_structures (list[str]): List of initial structure file paths.
+        calculation_name_and_isparaleljob (tuple[list[str], bool]): A tuple containing
+            a list of calculation names and a boolean indicating if the job is parallel.
+        calc_path (str): The base path for the calculation directories.
+    """
     for calculation_name, do_paralel in calculation_name_and_isparaleljob:
         with open(
             os.path.join(calc_path, f"{calculation_name}.sh"), "w", newline="\n"
@@ -751,12 +930,13 @@ def generate_batch_execution_script(
     command: str = "bash run.sh",
 ) -> None:
     """
+    Generates a batch execution script to run commands across multiple initial structure directories.
     Args:
-        init_name (list[str]): list of initial structure names. This is child directory of base_dir
-        base_dir (str): base directory
-        calc_path (str | None): calculation directory name. (4_md_main, 4_md, ...) If None, command will run in the initial structure directory
-        command (str): command to run t he calculation
-
+        init_name (list[str]): A list of initial structure names (subdirectories within `base_dir`).
+        base_dir (str): The base directory containing the initial structure directories.
+        calc_path (str | None): The name of the calculation subdirectory within each initial structure directory.
+                                If None, the command runs in the initial structure directory.
+        command (str): The command to run for each calculation.
     """
     with open(os.path.join(base_dir, "run.sh"), "w", newline="\n") as f:
         for i, file in enumerate(init_name):

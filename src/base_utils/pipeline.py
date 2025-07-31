@@ -1,3 +1,8 @@
+"""
+This module provides utility functions for building and managing data processing pipelines.
+It includes functions for joining multiple functions, flattening nested lists,
+and finding files based on various criteria.
+"""
 import os
 from typing import Iterable, Callable
 from warnings import warn
@@ -10,6 +15,7 @@ from base_utils.typecheck import type_check
 def deprecated(message: str):
     """
     Decorator to mark a function as deprecated.
+    When the decorated function is called, a DeprecationWarning is issued with the provided message.
     """
 
     def decorator(func: Callable):
@@ -25,7 +31,8 @@ def deprecated(message: str):
 @type_check
 def join(funcs: list[Callable]) -> Callable:
     """
-    Join multiple functions
+    Joins multiple functions into a single callable.
+    The output of each function becomes the input of the next function in the list.
     """
 
     def new_func(*args):
@@ -46,7 +53,8 @@ def join(funcs: list[Callable]) -> Callable:
 @deprecated("Use numpy flatten instead")
 def flatten(data: Iterable[Iterable | object]) -> list:
     """
-    Flatten nested list
+    Recursively flattens a nested iterable (list, tuple, etc.) into a single-level list.
+    Note: This function is deprecated; consider using NumPy's flatten for better performance.
     """
     result = []
     for item in data:
@@ -63,7 +71,8 @@ def flatten(data: Iterable[Iterable | object]) -> list:
 @type_check
 def find_all_file(path: str) -> list[str]:
     """
-    Find all files in the path
+    Recursively finds all files within a given directory and its subdirectories.
+    Returns a list of absolute paths to the files.
     """
     import os
 
@@ -78,7 +87,8 @@ def find_all_file(path: str) -> list[str]:
 @type_check
 def find_all_file_by_suffix(path: str, suffix: str) -> list[str]:
     """
-    Find all files in the path by suffix
+    Finds all files within a given directory and its subdirectories that end with a specified suffix.
+    Returns a list of absolute paths to the matching files.
     """
 
     all_files = find_all_file(path)
@@ -88,7 +98,8 @@ def find_all_file_by_suffix(path: str, suffix: str) -> list[str]:
 @type_check
 def find_all_file_by_prefix(path: str, prefix: str) -> list[str]:
     """
-    Find all files in the path by prefix
+    Finds all files within a given directory and its subdirectories whose base name starts with a specified prefix.
+    Returns a list of absolute paths to the matching files.
     """
 
     all_files = find_all_file(path)
@@ -98,7 +109,8 @@ def find_all_file_by_prefix(path: str, prefix: str) -> list[str]:
 @type_check
 def get_subfolders(path: str) -> list[tuple[str, str]]:
     """
-    Get all subfolders in the path
+    Retrieves a list of all immediate subfolders within a given path.
+    Returns a list of tuples, where each tuple contains the subfolder name and its absolute path.
     """
     import os
 

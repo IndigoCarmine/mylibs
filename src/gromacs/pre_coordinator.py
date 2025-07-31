@@ -1,3 +1,8 @@
+"""
+This module provides functions for pre-coordinating molecular structures.
+These functions are used to align and orient molecules in a specific way,
+which can be useful for setting up GROMACS simulations or other molecular analyses.
+"""
 from scipy.spatial.transform import Rotation
 import mole.molecules as molecules
 import numpy as np
@@ -7,7 +12,16 @@ def pre_coordinate[
     T: molecules.IMolecule
 ](molecule: T, topO: int, aromaticsideO: int, aromaticothersideO: int) -> T:
     """
-    pre-coordinate molecule
+    Pre-coordinates a molecule by translating its 'top' atom to the origin,
+    then rotating it so that a vector defined by two aromatic side atoms aligns with the x-axis,
+    and finally rotating it to align another aromatic side atom with the xz-plane.
+    Args:
+        molecule (T): The molecule object to pre-coordinate.
+        topO (int): Index of the 'top' atom.
+        aromaticsideO (int): Index of an atom on the aromatic side.
+        aromaticothersideO (int): Index of another atom on the aromatic side.
+    Returns:
+        T: The pre-coordinated molecule object.
     """
     top_coordinate = molecule.get_child(topO).coordinate
     molecule.translate(-top_coordinate)
@@ -38,7 +52,16 @@ def precooredinate2[
     T: molecules.IMolecule
 ](molecule: T, topO: int, aromaticsideNH: int, aromaticothersideO: int) -> T:
     """
-    pre-coordinate molecule
+    Pre-coordinates a molecule by translating its 'top' atom to the origin,
+    then rotating it to align an aromatic side NH atom with the x-axis,
+    and finally rotating it to align another aromatic side O atom with the xz-plane.
+    Args:
+        molecule (T): The molecule object to pre-coordinate.
+        topO (int): Index of the 'top' atom.
+        aromaticsideNH (int): Index of an aromatic side NH atom.
+        aromaticothersideO (int): Index of another aromatic side O atom.
+    Returns:
+        T: The pre-coordinated molecule object.
     """
 
     # move top O to origin

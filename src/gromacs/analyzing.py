@@ -1,3 +1,8 @@
+"""
+This module provides tools for analyzing GROMACS simulation data.
+It includes functionalities for recording and managing analysis results,
+processing multiple simulation files, and generating analysis scripts.
+"""
 from concurrent.futures import ProcessPoolExecutor
 import copy
 import os
@@ -13,29 +18,66 @@ import base_utils.typecheck as tc
 
 @total_ordering
 class Recorder:
+    """
+    A class to record and manage analysis results for a specific calculation.
+    It stores named values and log data, and supports concatenation with other Recorders.
+    """
     calc_name: str
     values: list[tuple[str, float]]
     log_data: list[str]
 
     def __init__(self, calculation_name: str):
+        """
+        Initializes a new Recorder instance.
+        Args:
+            calculation_name (str): The name of the calculation this recorder is for.
+        """
         self.calc_name = calculation_name
         self.values = []
         self.log_data = []
 
     def log(self, val):
+        """
+        Adds a log entry to the recorder.
+        Args:
+            val: The value to log.
+        """
         self.log_data.append(str(val))
 
     def add_value(self, name: str, val: float):
+        """
+        Adds a named numerical value to the recorder.
+        Args:
+            name (str): The name of the value.
+            val (float): The numerical value.
+        """
         self.values.append((name, val))
 
     def add_value_of_default_array_analysis(self, name: str, array: float):
+        """
+        Adds mean and standard deviation of a numerical array as named values.
+        Args:
+            name (str): The base name for the values (e.g., "energy" will result in "energy_mean" and "energy_standard").
+            array (float): The numerical array to analyze.
+        """
         self.add_value(f"{name}_mean", np.mean(array))
         self.add_value(f"{name}_standard", np.std(array))
 
     def get_all_valuename(self) -> list[str]:
+        """
+        Returns a list of all value names recorded.
+        Returns:
+            list[str]: A list of value names.
+        """
         return [name for name, _ in self.values]
 
     def concat(self, recorder: "Recorder"):
+        """
+        Concatenates another Recorder's values into this recorder.
+        Raises ValueError if calculation names do not match or if there are duplicate value names.
+        Args:
+            recorder (Recorder): The Recorder object to concatenate.
+        """
         if self.calc_name != recorder.calc_name:
             raise ValueError(
                 "Recorders dont have a same calculation_name: self is {} but arg is {}".format(
@@ -51,12 +93,18 @@ class Recorder:
                 self.values.append((name, val))
 
     def __eq__(self, other):
+        """
+        Compares two Recorder objects for equality based on their calculation name.
+        """
         if not isinstance(other, Recorder):
             raise TypeError("Cannot compare with Recorder and {}".format(type(other)))
 
         return self.calc_name == other.calc_name
 
     def __lt__(self, other):
+        """
+        Compares two Recorder objects for less than based on their calculation name.
+        """
         if not isinstance(other, Recorder):
             return TypeError("Cannot compare with Recorder and {}".format(type(other)))
 
@@ -65,11 +113,12 @@ class Recorder:
 
 @tc.type_check
 def generate_excel(file_name: str, recoders: list[Recorder]):
-    """generate excel file from recoders
+    """
+    Generates an Excel file from a list of Recorder objects.
+    Each Recorder's values are written as a row in the Excel file.
     Args:
-        file_name (str): file name
-        recoders (list[Recorder]): recoders
-
+        file_name (str): The name of the Excel file to generate.
+        recoders (list[Recorder]): A list of Recorder objects containing the data.
     """
     # all = set()
     # for recoder in recoders:
@@ -91,10 +140,14 @@ def generate_excel(file_name: str, recoders: list[Recorder]):
 def mixing_recorders(
     base_recorder_list: list[Recorder], recorder_list: list[Recorder]
 ) -> list[Recorder]:
-    """mixing two recoders
+    """
+    Mixes (concatenates) values from a list of new recorders into a base list of recorders.
+    Recorders are matched by their `calc_name`.
     Args:
-        base_recorder_list (list[Recorder]): base recoders
-        recorder_list (list[Recorder]): recoders to add
+        base_recorder_list (list[Recorder]): The base list of recorders to which values will be added.
+        recorder_list (list[Recorder]): The list of recorders whose values will be added.
+    Returns:
+        list[Recorder]: A new list of recorders with mixed values.
     """
     new_recorders = copy.deepcopy(base_recorder_list)
 
@@ -114,14 +167,15 @@ def perocess_files(
     do_parallel: bool = False,
 ) -> list[Recorder]:
     """
-
+    Processes files within a specified calculation base directory.
+    Applies a given work function to each relevant directory, optionally in parallel.
     Args:
-        calculation_basedir (str): base directory of calculations
-        last_calc (str): last calculation name (e.g. 4_md_main)
-        work (Callable[[str], Recorder]): function to work on each calculation
-        do_parallel (bool): whether to do parallel processing or not
+        calculation_basedir (str): The base directory containing calculation folders.
+        last_calc: The name of the last calculation subdirectory (e.g., "4_md_main").
+        work (Callable[[str], Recorder | None]): A function that takes a directory path and returns a Recorder object or None.
+        do_parallel (bool): If True, processes files in parallel using a ProcessPoolExecutor.
     Returns:
-        list[Recorder]: list of recorders
+        list[Recorder]: A list of Recorder objects generated by the work function.
     """
 
     # get fullpathes of all file and dir in calculation_basedir
@@ -156,6 +210,15 @@ def perocess_files(
 def _analyze_trj_inner(
     path: str, work: Callable[[mda.Universe, str], Recorder]
 ) -> Recorder | None:
+    """
+    Internal helper function to analyze a single trajectory file.
+    Loads the GROMACS universe and applies a work function.
+    Args:
+        path (str): The path to the directory containing output.gro and output.xtc.
+        work (Callable[[mda.Universe, str], Recorder]): A function that takes an MDAnalysis Universe object and the path, and returns a Recorder.
+    Returns:
+        Recorder | None: A Recorder object with analysis results, or None if files are not found.
+    """
     grofile = os.path.join(path, "output.gro")
     xtcfile = os.path.join(path, "output.xtc")
     if not os.path.exists(grofile):
@@ -174,6 +237,17 @@ def analyze_trj(
     work: Callable[[mda.Universe, str], Recorder | None],
     do_parallel: bool = False,
 ) -> list[Recorder]:
+    """
+    Analyzes GROMACS trajectory files across multiple calculation directories.
+    It uses `perocess_files` internally to handle parallel processing.
+    Args:
+        calculation_basedir (str): The base directory containing calculation folders.
+        last_calc: The name of the last calculation subdirectory (e.g., "4_md_main").
+        work (Callable[[mda.Universe, str], Recorder | None]): A function that takes an MDAnalysis Universe object and the path, and returns a Recorder.
+        do_parallel (bool): If True, processes files in parallel.
+    Returns:
+        list[Recorder]: A list of Recorder objects with analysis results.
+    """
     return perocess_files(
         calculation_basedir,
         last_calc,
@@ -184,7 +258,12 @@ def analyze_trj(
 
 def get_calcname(calc_path: str) -> str:
     """
-    calcpath "...../iQuin/4_md_main" -> "iQuin"
+    Extracts the calculation name from a given calculation path.
+    Example: "...../iQuin/4_md_main" -> "iQuin"
+    Args:
+        calc_path (str): The full path to the calculation directory.
+    Returns:
+        str: The extracted calculation name.
     """
 
     splitedpath = os.path.split(calc_path)
@@ -198,13 +277,14 @@ def get_calcname(calc_path: str) -> str:
 @tc.type_check
 def grouping[T](groups: list[T], group_size: int) -> Iterator[list[T]]:
     """
+    Groups a list into sub-lists of a specified size.
     Args:
-        groups (list[T]): list to group
-        group_size (int): size of each group
+        groups (list[T]): The list to be grouped.
+        group_size (int): The desired size of each sub-group.
     Returns:
-        Iterator[list[T]]: grouped list
+        Iterator[list[T]]: An iterator yielding sub-lists.
 
-    example:
+    Example:
     for group in grouping([1,2,3,4,5,6,7,8,9], 3):
         print(group)
         # [[1, 2, 3],
@@ -216,11 +296,21 @@ def grouping[T](groups: list[T], group_size: int) -> Iterator[list[T]]:
 
 
 class _Addable[T](Protocol):
+    """
+    A Protocol defining types that support the addition operation.
+    """
     def __add__(self: T, other: T) -> T: ...
 
 
 @tc.type_check
 def concat(group: list[_Addable]) -> _Addable:
+    """
+    Concatenates a list of addable objects using their __add__ method.
+    Args:
+        group (list[_Addable]): A list of objects that support addition.
+    Returns:
+        _Addable: The concatenated result.
+    """
     temp = group[0]
     for i in range(1, len(group)):
         temp = temp + group[i]
@@ -231,14 +321,15 @@ def concat(group: list[_Addable]) -> _Addable:
 def make_analyze_command_script(
     basedir: str, calcname: str, command: str, commandname: str
 ):
-    """make script file to analyze calculation result
+    """
+    Generates a bash script to run an analysis command across multiple calculation directories.
     Args:
-        basedir (str): base directory
-        calcname (str): calculation directory name
-        command (str): command to analyze
-        commandname (str): script file name
+        basedir (str): The base directory containing the calculation folders.
+        calcname (str): The name of the calculation subdirectory (e.g., "4_md").
+        command (str): The shell command to execute for analysis (e.g., "echo 0 0 | gmx hbond -f output.xtc -s output.tpr -num hbond.xvg").
+        commandname (str): The desired name for the generated script file (e.g., "hbond").
 
-    example:
+    Example:
         command = "echo 0 0 | gmx hbond -f output.xtc -s output.tpr -num hbond.xvg"
         make_analyze_command_script(
             path, "4_md", command, "hbond"

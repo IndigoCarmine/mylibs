@@ -1,3 +1,8 @@
+"""
+This module provides functions for fitting experimental data to cooperative binding models,
+including the isodesmic and cooperative polymerization models.
+It also includes utilities for data loading, manipulation, and visualization of fitting results.
+"""
 from matplotlib import pyplot as plt
 import numpy as np
 import numpy.typing as npt
@@ -7,9 +12,12 @@ import base_utils.plotlib as pl
 
 def isodesmic(X: np.number | npt.NDArray[np.number], K: np.number | float | int):
     """
-    X: concentration of monomer (UV/Vis absorbance)
-    K: equilibrium constant
-    return: fraction of monomer
+    Calculates the fraction of monomer in an isodesmic polymerization model.
+    Args:
+        X (np.number | npt.NDArray[np.number]): Concentration of monomer (e.g., UV/Vis absorbance).
+        K (np.number | float | int): Equilibrium constant.
+    Returns:
+        np.number | npt.NDArray[np.number]: Fraction of monomer.
     """
     B = K * X
     return (2 * B + 1 - (4 * B + 1) ** 0.5) / (2 * B)
@@ -17,11 +25,13 @@ def isodesmic(X: np.number | npt.NDArray[np.number], K: np.number | float | int)
 
 def cubic(b, c, d):
     """
-    b, c, d: coefficients of the cubic equation
-
-    x^3 + bx^2 + cx + d = 0
-
-    return: roots of the cubic equation
+    Solves a cubic equation of the form x^3 + bx^2 + cx + d = 0 using Cardano's formula.
+    Args:
+        b: Coefficient of x^2.
+        c: Coefficient of x.
+        d: Constant term.
+    Returns:
+        float: The real root of the cubic equation.
     """
     p = (3 * c - b**2) / 3
     q = (2 * b**3 - 9 * b * c + 27 * d) / 27
@@ -45,11 +55,14 @@ def cooperative(
     scaler: float | np.number = 1,
 ) -> float | npt.NDArray[np.number]:
     """
-    Conc: total concentration of substrate
-    K: equilibrium constant
-    sigma: cooperativity factor
-
-    return: rate of supramolecular polymer formation
+    Calculates the rate of supramolecular polymer formation based on a cooperative binding model.
+    Args:
+        Conc (float | npt.NDArray[np.number]): Total concentration of the substrate.
+        K (float | np.number): Equilibrium constant.
+        sigma (float | np.number): Cooperativity factor.
+        scaler (float | np.number): Scaling factor for the output.
+    Returns:
+        float | npt.NDArray[np.number]: Rate of supramolecular polymer formation.
     """
     scaled_conc = K * Conc
 
@@ -78,6 +91,18 @@ def cooperative(
 
 
 def temp_cooperative(Temp, deltaH, deltaS, deltaHnuc, c_tot, scaler=1) -> np.ndarray:
+    """
+    Calculates the cooperative binding based on temperature-dependent parameters.
+    Args:
+        Temp: Temperature.
+        deltaH: Enthalpy change.
+        deltaS: Entropy change.
+        deltaHnuc: Nucleation enthalpy change.
+        c_tot: Total concentration.
+        scaler: Scaling factor.
+    Returns:
+        np.ndarray: Cooperative binding values.
+    """
     R = 8.314
 
     K = np.exp(-deltaH / (R * Temp) + deltaS / R)
@@ -90,8 +115,14 @@ def model(
     params: lf.Parameters, x: np.ndarray, c_tot: float, scaler: float
 ) -> np.ndarray:
     """
-    params: parameters for the model
-    x: x values for the model
+    Defines the cooperative binding model for fitting.
+    Args:
+        params (lmfit.Parameters): Parameters for the model (deltaH, deltaS, deltaHnuc).
+        x (np.ndarray): X values (e.g., temperature).
+        c_tot (float): Total concentration.
+        scaler (float): Scaling factor.
+    Returns:
+        np.ndarray: Calculated Y values from the model.
     """
     # unpack params
     deltaH = params["deltaH"]
@@ -103,9 +134,13 @@ def model(
 
 def objective(params: lf.Parameters, data: list[pl.XYData]) -> np.ndarray:
     """
-    params: parameters for the model
-    data: mesured x-y dataset
-
+    Defines the objective function for fitting, calculating residuals between
+    measured data and the model's predictions.
+    Args:
+        params (lmfit.Parameters): Parameters for the model.
+        data (list[pl.XYData]): List of measured X-Y datasets.
+    Returns:
+        np.ndarray: Array of residuals.
     """
 
     nX = [len(d.X) for d in data]
@@ -126,9 +161,13 @@ def objective(params: lf.Parameters, data: list[pl.XYData]) -> np.ndarray:
 
 def objective2(params: lf.Parameters, data: list[pl.XYData]) -> np.ndarray:
     """
-    params: parameters for the model
-    data: mesured x-y dataset
-
+    Defines an alternative objective function for fitting, including a linear background term.
+    Calculates residuals between measured data and the model's predictions with background.
+    Args:
+        params (lmfit.Parameters): Parameters for the model, including background parameters.
+        data (list[pl.XYData]): List of measured X-Y datasets.
+    Returns:
+        np.ndarray: Array of residuals.
     """
 
     nX = [len(d.X) for d in data]
@@ -155,6 +194,9 @@ def objective2(params: lf.Parameters, data: list[pl.XYData]) -> np.ndarray:
 
 
 def main():
+    """
+    Main function for testing the cooperative binding model and plotting results.
+    """
     X = np.linspace(0, 800, 10000)
     Y = temp_cooperative(X, -102000, -198, -20000, 0.000030, scaler=0.5)
     print(Y)
@@ -173,6 +215,14 @@ def main():
 
 
 def fit(path: str = "UV", clip: int = 65):
+    """
+    Performs fitting of experimental data to the cooperative binding model.
+    Loads data from specified path, preprocesses it, and uses lmfit to minimize residuals.
+    Saves fitting report and plots results.
+    Args:
+        path (str): Path to the directory containing experimental data files.
+        clip (int): Clipping value for X-axis data.
+    """
     import base_utils.pipeline as pi
     import os
 
@@ -272,7 +322,15 @@ def fit(path: str = "UV", clip: int = 65):
         fig.savefig(file_name, bbox_inches="tight", transparent=True)
 
 
+
 def fit2(path: str = "UV"):
+    """
+    Performs fitting of experimental data to the cooperative binding model with a background term.
+    Loads data from specified path, preprocesses it, and uses lmfit to minimize residuals.
+    Saves fitting report and plots results.
+    Args:
+        path (str): Path to the directory containing experimental data files.
+    """
     import base_utils.pipeline as pi
     import os
 
@@ -376,7 +434,11 @@ def fit2(path: str = "UV"):
         fig.savefig(file_name, bbox_inches="tight", transparent=True)
 
 
+
 def test_plot():
+    """
+    Generates a test plot for the cooperative binding model across different concentrations.
+    """
     conc = [
         20,
         40,

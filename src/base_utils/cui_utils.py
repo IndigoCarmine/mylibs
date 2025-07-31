@@ -1,3 +1,7 @@
+"""
+This module provides utility functions for command-line interface (CLI) interactions.
+It includes functions for inputting file paths, formatting strings, and displaying colored messages.
+"""
 from base_utils import typecheck
 
 

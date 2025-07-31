@@ -1,20 +1,32 @@
+"""
+This module provides a class for parsing, manipulating, and exporting GROMACS MDP (Molecular Dynamics Parameters) files.
+It also defines default MDP parameters for common simulation types like energy minimization (EM) and molecular dynamics (MD).
+"""
 from typing import Callable
 import copy
 
-"""
-The file contains mdp parser and mdp default parameters.
-"""
-
 
 class _Parameter:
+    """
+    Internal class to represent an MDP parameter with a key and an optional checker function.
+    """
     def __init__(self, key: str, checker: Callable[[str], bool]):
         self.key = key
         self.checker = checker
 
 
 class MDParameters:
+    """
+    A class to manage GROMACS MDP (Molecular Dynamics Parameters) settings.
+    It allows loading, modifying, and exporting MDP parameters.
+    """
     def __init__(self, data: dict[str, str] = {}, ignore_deepcopy=False):
-
+        """
+        Initializes the MDParameters object.
+        Args:
+            data (dict[str, str]): Initial MDP parameters as a dictionary.
+            ignore_deepcopy (bool): If True, the input data dictionary is used directly without deep copying.
+        """
         if ignore_deepcopy:
             self.data = data
         else:
@@ -22,7 +34,9 @@ class MDParameters:
 
     def export(self) -> str:
         """
-        Export the MDP parameters to a string.
+        Exports the MDP parameters to a string in GROMACS MDP file format.
+        Returns:
+            str: The formatted MDP parameters string.
         """
         lines = []
         max_length = max(len(key) for key in self.data.keys())
@@ -32,6 +46,9 @@ class MDParameters:
         return "\n".join(lines)
 
     def __str__(self) -> str:
+        """
+        Returns a string representation of the MDP parameters, suitable for preview.
+        """
         text = """; GROMACS MDP parameters file preview"""
         text += "\n"
         text += self.export()
@@ -41,12 +58,20 @@ class MDParameters:
         return text
 
     def _print_python_dict(self):
+        """
+        Prints the internal dictionary representation of the MDP parameters.
+        (For debugging purposes)
+        """
         print(self.data)
 
     @classmethod
     def from_text(cls, text: str) -> "MDParameters":
         """
-        Create a new MDParameters instance from a string.
+        Creates a new MDParameters instance by parsing a string containing MDP parameters.
+        Args:
+            text (str): A string containing MDP parameters.
+        Returns:
+            MDParameters: A new MDParameters object.
         """
         mdp = cls()
         for line in text.split("\n"):
@@ -62,14 +87,23 @@ class MDParameters:
     @classmethod
     def from_file(cls, path: str) -> "MDParameters":
         """
-        Create a new MDParameters instance from a file.
+        Creates a new MDParameters instance by reading MDP parameters from a file.
+        Args:
+            path (str): The path to the MDP file.
+        Returns:
+            MDParameters: A new MDParameters object.
         """
         with open(path, "r") as f:
             return cls.from_text(f.read())
 
     def check(self, key: str) -> bool:
         """
-        Check if a key exists in the MDP parameters.
+        Checks if a specific key exists in the MDP parameters.
+        Args:
+            key (str):
+            The key to check.
+        Returns:
+            bool: True if the key exists, False otherwise.
         """
         return key in self.data
 
@@ -79,7 +113,12 @@ class MDParameters:
         value: str,
     ) -> "MDParameters":
         """
-        Add a new key-value pair or update an existing one.
+        Adds a new key-value pair or updates an existing one in the MDP parameters.
+        Args:
+            key (str): The parameter key.
+            value (str): The parameter value.
+        Returns:
+            MDParameters: The current MDParameters object (for chaining).
         """
         self.data[key] = value
 
@@ -87,7 +126,11 @@ class MDParameters:
 
     def remove(self, key: str) -> "MDParameters":
         """
-        Remove a key from the MDP parameters.
+        Removes a key-value pair from the MDP parameters.
+        Args:
+            key (str): The key to remove.
+        Returns:
+            MDParameters: The current MDParameters object (for chaining).
         """
         self.data.pop(key, None)
 
@@ -95,7 +138,11 @@ class MDParameters:
 
     def get(self, key: str) -> str | None:
         """
-        Get the value of a key.
+        Gets the value associated with a specific key.
+        Args:
+            key (str): The key to retrieve the value for.
+        Returns:
+            str | None: The value if the key exists, otherwise None.
         """
         return self.data.get(key, None)
 

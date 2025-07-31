@@ -1,3 +1,8 @@
+"""
+This module provides a comprehensive set of tools for creating and customizing plots using Matplotlib.
+It includes functionalities for defining plot styles, handling data labels, managing plot options,
+loading various data formats (JASCO, XVG, DAT), and generating 1D and 2D plots.
+"""
 import csv
 import os
 from typing import Optional
@@ -33,6 +38,9 @@ slide_color_orange = "#ff7b00"
 
 
 class Style(Enum):
+    """
+    Defines different plotting styles for various output formats (e.g., paper, presentation).
+    """
     paper = 0
     presentation_black = 1
     presentation_white = 2
@@ -41,16 +49,26 @@ class Style(Enum):
 
 @dataclass
 class Color:
+    """
+    Manages colors for different plotting styles.
+    Allows defining a set of colors that adapt to various output contexts (e.g., paper, presentation).
+    """
     colordict: dict[Style, str | None]
 
     def __init__(self, colordict: dict[Style, str | None]):
         self.colordict = colordict
 
     def get_color(self, style: Style) -> str | None:
+        """
+        Retrieves the color string for a given plotting style.
+        """
         return self.colordict[style]
 
     @classmethod
     def single_color(cls, color: str) -> "Color":
+        """
+        Creates a Color instance where the same color is used across all styles.
+        """
         return cls(
             {
                 Style.paper: color,
@@ -115,6 +133,9 @@ colors: dict[str, Color] = {
 
 @dataclass
 class DataLabel:
+    """
+    Represents labels and units for X and Y axes of a plot.
+    """
     X_label: Optional[str]
     X_unit: Optional[str]
     Y_label: Optional[str]
@@ -122,6 +143,9 @@ class DataLabel:
 
 
 class DataLabels(Enum):
+    """
+    Predefined DataLabel instances for common spectroscopic data types.
+    """
     UV = DataLabel("wavelength", "nm", "absorbance", "-")
     FL = DataLabel("wavelength", "nm", "intensity", "-")
     CD = DataLabel("wavelength", "nm", "mdeg", "-")
@@ -131,12 +155,20 @@ class DataLabels(Enum):
 
 @dataclass(frozen=True)
 class XYData:
+    """
+    Represents a set of X-Y data points with associated labels and an optional title.
+    Provides methods for data manipulation such as renaming, shifting, scaling, and normalization.
+    """
     X: npt.NDArray[np.number]
     Y: npt.NDArray[np.number]
     dataLabel: DataLabel
     Title: str = ""
 
     def __post_init__(self):
+        """
+        Initializes the XYData object and performs validation checks.
+        Raises ValueError if X and Y arrays have different lengths or are empty.
+        """
         if len(self.X) != len(self.Y):
             raise ValueError(
                 f"X and Y must have the same length: {len(self.X)} != {len(self.Y)}"
@@ -145,36 +177,66 @@ class XYData:
             raise ValueError("X and Y must not be empty")
 
     def rename_labels(self, label: DataLabel) -> "XYData":
+        """
+        Returns a new XYData object with updated DataLabel.
+        """
         return XYData(self.X, self.Y, label, self.Title)
 
     def rename_title(self, title: str) -> "XYData":
+        """
+        Returns a new XYData object with an updated title.
+        """
         return XYData(self.X, self.Y, self.dataLabel, title)
 
     def get_y_at_range(self, xmin: float = -np.inf, xmax: float = np.inf) -> np.ndarray:
+        """
+        Returns the Y values within a specified X range.
+        """
         mask = (self.X >= xmin) & (self.X <= xmax)
         return self.Y[mask]
 
     def get_y_at_nearest_x(self, x: float) -> float:
+        """
+        Returns the Y value corresponding to the X value nearest to the given 'x'.
+        """
         idx = np.argmin(np.abs(self.X - x))
         return self.Y[idx]
 
     def xshift(self, shift: float) -> "XYData":
+        """
+        Returns a new XYData object with X values shifted by a given amount.
+        """
         return XYData(self.X + shift, self.Y, self.dataLabel, self.Title)
 
     def yshift(self, shift: float) -> "XYData":
+        """
+        Returns a new XYData object with Y values shifted by a given amount.
+        """
         return XYData(self.X, self.Y + shift, self.dataLabel, self.Title)
 
     def xscale(self, scale: float) -> "XYData":
+        """
+        Returns a new XYData object with X values scaled by a given factor.
+        """
         return XYData(self.X * scale, self.Y, self.dataLabel, self.Title)
 
     def yscale(self, scale: float) -> "XYData":
+        """
+        Returns a new XYData object with Y values scaled by a given factor.
+        """
         return XYData(self.X, self.Y * scale, self.dataLabel, self.Title)
 
     def clip(self, xmin: float, xmax: float) -> "XYData":
+        """
+        Returns a new XYData object with data clipped to a specified X range.
+        """
         mask = (self.X >= xmin) & (self.X <= xmax)
         return XYData(self.X[mask], self.Y[mask], self.dataLabel, self.Title)
 
     def normalize(self) -> "XYData":
+        """
+        Returns a new XYData object with Y values normalized to a range of 0 to 1.
+        """
         Y = self.Y - np.min(self.Y)
         Y = Y / np.max(Y)
         print("scaling factor is", 1 / np.max(self.Y))
@@ -183,6 +245,9 @@ class XYData:
 
 @dataclass
 class PlotOption:
+    """
+    Defines options for plotting individual data series, such as color, marker, and line style.
+    """
     color: Color
     marker: str | None
     markersize: float
@@ -191,12 +256,18 @@ class PlotOption:
 
 
 class PlotOptions:
+    """
+    Predefined PlotOption instances for common plotting scenarios.
+    """
     paper = PlotOption(colors["monotone"], None, 1, "-", 1.5)
     presentation = PlotOption(colors["monotone"], "o", 2, "-", 3)
 
 
 @dataclass
 class FigureOption:
+    """
+    Defines options for the overall figure, including size, plot options, and background.
+    """
     size: tuple[float, float]
     plot_option: PlotOption
     is_white_background: bool = True
@@ -207,6 +278,9 @@ default_figure_size = (4, 3)
 
 
 class FigureOptions:
+    """
+    Predefined FigureOption instances for common figure setups.
+    """
     papar = FigureOption(default_figure_size, PlotOptions.paper)
     presentation_white = FigureOption(
         default_figure_size, PlotOptions.presentation, is_white_background=True
@@ -218,12 +292,16 @@ class FigureOptions:
 
 def _change_escape(text: str) -> str:
     """
-    Change \\r\\n to \\n
+    Replaces Windows-style carriage return and newline characters (\r\n) with Unix-style newlines (\n).
     """
     return text.replace("\r\n", "\n")
 
 
 def _load_jasco_data(path: str) -> tuple[DataLabel, pd.DataFrame]:
+    """
+    Loads data from a JASCO-formatted file (or CSV that can be converted to JASCO-like tab-separated).
+    Extracts data type and returns a DataLabel and a pandas DataFrame.
+    """
     f = open(path, "r")
     text = f.read()
     f.close()
@@ -263,9 +341,14 @@ def _load_jasco_data(path: str) -> tuple[DataLabel, pd.DataFrame]:
     return label, array
 
 
+
 @deprecated("Use load_data instead")
 @typecheck.type_check
 def load_1ddata(path: str) -> XYData:
+    """
+    Loads 1D data from a JASCO-formatted file.
+    This function is deprecated; use `load_jasco_data` instead.
+    """
     label, array = _load_jasco_data(path)
     return XYData(np.array(array[0].values), np.array(array[1].values), label)
 
@@ -273,6 +356,10 @@ def load_1ddata(path: str) -> XYData:
 @deprecated("Use load_data instead")
 @typecheck.type_check
 def load_2ddata(path: str) -> list[XYData]:
+    """
+    Loads 2D data from a JASCO-formatted file.
+    This function is deprecated; use `load_jasco_data` instead.
+    """
     label, array = _load_jasco_data(path)
 
     return [
@@ -283,6 +370,10 @@ def load_2ddata(path: str) -> list[XYData]:
 
 @typecheck.type_check
 def load_xvgdata(path: str) -> XYData:
+    """
+    Loads data from an XVG-formatted file.
+    Parses title, axis labels, and legend from the file and returns an XYData object.
+    """
     f = open(path, "r")
     data = f.readlines()
     f.close()
@@ -315,8 +406,8 @@ def load_xvgdata(path: str) -> XYData:
 @typecheck.type_check
 def convert_from_df(df: pd.DataFrame, label: DataLabel) -> list[XYData]:
     """
-    Convert DataFrame to list of XYData
-    first column is x, other columns are y
+    Converts a pandas DataFrame into a list of XYData objects.
+    Assumes the first column of the DataFrame is the X-axis data, and subsequent columns are Y-axis data.
     """
     return [
         XYData(np.array(df.iloc[:, 0].values), np.array(df.iloc[:, i].values), label)
@@ -326,6 +417,10 @@ def convert_from_df(df: pd.DataFrame, label: DataLabel) -> list[XYData]:
 
 @typecheck.type_check
 def load_jasco_data(p: str) -> list[XYData]:
+    """
+    Loads JASCO-formatted data from a file and returns it as a list of XYData objects.
+    Handles both 1D and 2D data formats.
+    """
     label, data = _load_jasco_data(p)
 
     if isnan(data[0][0]):
@@ -355,6 +450,10 @@ def load_dat(
     y_unit: str = "",
     has_header: bool = False,
 ) -> XYData:
+    """
+    Loads data from a .dat file (tab-separated) and returns it as an XYData object.
+    Allows specifying axis labels, units, and whether the file has a header.
+    """
     f = open(path, "r")
     data = f.readlines()
     f.close()
@@ -379,6 +478,10 @@ def load_dat(
 
 @typecheck.type_check
 def slice_data(data: list[XYData], x_value: float, new_x_values: list[float]) -> XYData:
+    """
+    Slices a list of XYData objects at a specific X-value and interpolates Y-values
+    onto a new set of X-values.
+    """
     def nearest(array, value):
         idx = (np.abs(array - value)).argmin()
         return idx
@@ -399,6 +502,10 @@ def plot_old(
     figure_option: FigureOption = FigureOptions.papar,
     save_path: Optional[str] = None,
 ):
+    """
+    Generates a 1D plot of XYData.
+    This function is deprecated; use `plot1d` or `plot2d` instead.
+    """
     fig = plt.figure()
     ax = fig.add_subplot(111)
     fig.set_size_inches(figure_option.size)
@@ -427,6 +534,10 @@ def plot_simple(
     figure_option: FigureOption = FigureOptions.papar,
     style: Style = Style.paper,
 ) -> None:
+    """
+    Plots a single XYData series on a given Matplotlib Axes object.
+    Applies specified plot options and style.
+    """
     ax.plot(
         data.X,
         data.Y,
@@ -451,6 +562,10 @@ def plot1d(
     figure_option: FigureOption = FigureOptions.papar,
     range: Optional[tuple[float, float]] = None,
 ) -> None:
+    """
+    Plots a single 1D XYData series on a given Matplotlib Axes object.
+    Allows setting X-axis range.
+    """
     plot_simple(ax, data, plot_option, style=style)
     ax.set_xlim(np.min(data.X), np.max(data.X))
     if range is not None:
@@ -467,6 +582,10 @@ def plot2d(
     xrange: Optional[tuple[float, float]] = None,
     yrange: Optional[tuple[float, float]] = None,
 ) -> None:
+    """
+    Plots multiple XYData series on a given Matplotlib Axes object, suitable for 2D plots.
+    Allows setting X and Y axis ranges.
+    """
     min, max = np.inf, -np.inf
     for d in data:
         plot_simple(ax, d, plot_option, style=style)
@@ -485,6 +604,10 @@ def plot2d(
 
 @typecheck.type_check
 def for_white_background(ax: Axes) -> None:
+    """
+    Configures the given Matplotlib Axes object for a white background theme.
+    Sets spine, label, and tick colors to black.
+    """
     ax.spines[:].set_color("black")
     ax.xaxis.label.set_color("black")
     ax.yaxis.label.set_color("black")
@@ -495,6 +618,10 @@ def for_white_background(ax: Axes) -> None:
 
 @typecheck.type_check
 def for_black_background(ax: Axes) -> None:
+    """
+    Configures the given Matplotlib Axes object for a black background theme.
+    Sets spine, label, and tick colors to white.
+    """
     ax.spines[:].set_color("white")
     ax.xaxis.label.set_color("white")
     ax.yaxis.label.set_color("white")
@@ -505,6 +632,9 @@ def for_black_background(ax: Axes) -> None:
 
 @typecheck.type_check
 def remove_all_text(ax: Axes) -> None:
+    """
+    Removes all text elements (labels, title, legend) from a given Matplotlib Axes object.
+    """
     ax.set_xlabel("")
     ax.set_ylabel("")
     ax.set_title("")

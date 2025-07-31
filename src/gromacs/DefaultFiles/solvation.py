@@ -1,3 +1,9 @@
+
+"""
+This script performs a solvation step using GROMACS `insert-molecules` command.
+It takes an input GRO file, a solvent GRO file, and parameters for insertion,
+then updates the topology file to include the inserted solvent molecules.
+"""
 import os
 import subprocess
 import argparse
@@ -82,3 +88,4 @@ with open(top_old, "r") as file:
         if is_molecules_section:
             newfile.write("MCH             {}\n".format(residues))
             is_molecules_section = False
+

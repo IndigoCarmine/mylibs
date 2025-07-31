@@ -1,3 +1,8 @@
+"""
+This module provides classes for parsing, manipulating, and generating GROMACS GRO files.
+It includes functionalities for representing atoms and molecules in the GRO format,
+and converting between GRO and XYZ file formats.
+"""
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import override
@@ -8,6 +13,10 @@ from mole.molecules import AtomBase, IMolecule
 
 
 class GroAtom(AtomBase):
+    """
+    Represents an atom in a GROMACS GRO file.
+    Inherits from AtomBase and adds GRO-specific properties like residue name and number.
+    """
     atom_name: str
     residue_name: str
     residue_number: int
@@ -20,6 +29,15 @@ class GroAtom(AtomBase):
         residue_number: int,
         coordinate: np.ndarray,
     ) -> None:
+        """
+        Initializes a GroAtom object.
+        Args:
+            atom_number (int): The atom's index.
+            atom_name (str): The atom's name (e.g., "C1", "O").
+            residue_name (str): The residue's name (e.g., "MOL").
+            residue_number (int): The residue's number.
+            coordinate (np.ndarray): The 3D coordinates of the atom.
+        """
         self.atom_name = atom_name
         self.residue_name = residue_name
         self.residue_number = residue_number
@@ -33,15 +51,29 @@ class GroAtom(AtomBase):
 
     @property
     def atom_symbol(self):
+        """
+        Returns the chemical symbol of the atom (first character of atom_name).
+        """
         return self.atom_name[0]
 
     def __str__(self) -> str:
+        """
+        Returns a string representation of the GroAtom in GRO file format.
+        (i5,2a5,i5,3f8.3,3f8.4)
+        """
         # (i5,2a5,i5,3f8.3,3f8.4)
         return f"{self.residue_number:>5}{self.residue_name:<5}{self.atom_name:>5}{self.index:>5}{self.coordinate[0]:>8.3f}{self.coordinate[1]:>8.3f}{self.coordinate[2]:>8.3f}"
 
     # factory method to create GroAtom object from a line in a gro file
     @classmethod
     def from_gro_line(cls, line: str):
+        """
+        Creates a GroAtom object by parsing a single line from a GRO file.
+        Args:
+            line (str): A line from a GRO file representing an atom.
+        Returns:
+            GroAtom: A new GroAtom instance.
+        """
         residue_number = int(line[:5])
         residue_name = line[5:10].strip()
         atom_name = line[10:15].strip()
@@ -54,6 +86,9 @@ class GroAtom(AtomBase):
         )
 
     def __deepcopy__(self, memo) -> "GroAtom":
+        """
+        Creates a deep copy of the GroAtom object.
+        """
         return GroAtom(
             self.index,
             self.atom_name,
@@ -65,6 +100,10 @@ class GroAtom(AtomBase):
 
 @dataclass
 class GroFile(IMolecule[GroAtom]):
+    """
+    Represents a GROMACS GRO file, containing molecular structure and box information.
+    Implements the IMolecule interface for common molecular operations.
+    """
     title: str
     atoms: list[GroAtom]
     box_x: float
@@ -76,12 +115,27 @@ class GroFile(IMolecule[GroAtom]):
     box_angle_z: float = 90
 
     def __len__(self) -> int:
+        """
+        Returns the number of atoms in the GRO file.
+        """
         return len(self.atoms)
 
     def find_atom(self, index: int) -> list[GroAtom]:
+        """
+        Finds atoms with a specific index.
+        Args:
+            index (int): The index of the atom to find.
+        Returns:
+            list[GroAtom]: A list of GroAtom objects matching the index.
+        """
         return [atom for atom in self.atoms if atom.index == index]
 
     def generate_gro_text(self) -> list[str]:
+        """
+        Generates the content of the GRO file as a list of strings.
+        Returns:
+            list[str]: A list of strings representing the GRO file content.
+        """
         gro = []
         gro.append(self.title)
         gro.append(f"   {len(self.atoms)}")
@@ -93,6 +147,13 @@ class GroFile(IMolecule[GroAtom]):
 
     @classmethod
     def from_gro_text(cls, lines: list[str]) -> "GroFile":
+        """
+        Creates a GroFile object by parsing a list of strings representing GRO file content.
+        Args:
+            lines (list[str]): A list of strings from a GRO file.
+        Returns:
+            GroFile: A new GroFile instance.
+        """
         # first line is the title
         title = lines[0].strip()
         # second line is the number of atoms
@@ -111,25 +172,52 @@ class GroFile(IMolecule[GroAtom]):
 
     @classmethod
     def from_gro_file(cls, file_path: str) -> "GroFile":
+        """
+        Creates a GroFile object by reading content from a GRO file.
+        Args:
+            file_path (str): The path to the GRO file.
+        Returns:
+            GroFile: A new GroFile instance.
+        """
         with open(file_path, "r") as f:
             lines = f.readlines()
         return cls.from_gro_text(lines)
 
     def save_gro(self, file_path: str):
+        """
+        Saves the current GroFile object to a GRO file.
+        Args:
+            file_path (str): The path to save the GRO file.
+        """
         with open(file_path, "w") as f:
             f.write("\n".join(self.generate_gro_text()))
 
     def renumber(self, start: int = 1):
+        """
+        Renumber the atoms in the GRO file starting from a specified index.
+        Args:
+            start (int): The starting index for renumbering.
+        """
         for i, atom in enumerate(self.atoms):
             atom.index = i + start
 
     def set_residue_number(self, number: int):
+        """
+        Sets the residue number for all atoms in the GRO file.
+        Args:
+            number (int): The new residue number.
+        """
         for atom in self.atoms:
             atom.residue_number = number
 
     # --------------------- XYZ FILE input/output ---------------------
 
     def generate_xyz_text(self) -> list[str]:
+        """
+        Generates the content of the XYZ file as a list of strings.
+        Returns:
+            list[str]: A list of strings representing the XYZ file content.
+        """
         def format_float(f: float) -> str:
             return f"{f:12.6f}"
 
@@ -148,12 +236,22 @@ class GroFile(IMolecule[GroAtom]):
         return xyz
 
     def save_xyz(self, file_path: str):
+        """
+        Saves the current GroFile object to an XYZ file.
+        Args:
+            file_path (str): The path to save the XYZ file.
+        """
         with open(file_path, "w") as f:
             f.write("\n".join(self.generate_xyz_text()))
 
     def load_xyz_text(self, data: list[str], multiple_molecules=False):
         """
-        load only coordinete data from xyz file
+        Loads coordinate data from a list of strings representing an XYZ file.
+        Args:
+            data (list[str]): A list of strings from an XYZ file.
+            multiple_molecules (bool): If True, handles multiple molecules in the XYZ file.
+        Raises:
+            ValueError: If the number of atoms in the XYZ file does not match or is not a multiple.
         """
         ANGSTROM_TO_NM = 0.1
 
@@ -193,16 +291,34 @@ class GroFile(IMolecule[GroAtom]):
             self.atoms = atoms
 
     def load_xyz_file(self, file_path: str, multiple_molecules=False):
+        """
+        Loads coordinate data from an XYZ file.
+        Args:
+            file_path (str): The path to the XYZ file.
+            multiple_molecules (bool): If True, handles multiple molecules in the XYZ file.
+        """
         with open(file_path, "r") as f:
             lines = f.readlines()
         self.load_xyz_text(lines, multiple_molecules)
 
     @override
     def get_children(self) -> list[GroAtom]:
+        """
+        Returns a list of all atoms in the GRO file.
+        """
         return self.atoms
 
     @override
     def get_child(self, index: int) -> GroAtom:
+        """
+        Returns a specific atom by its index.
+        Args:
+            index (int): The index of the atom to retrieve.
+        Returns:
+            GroAtom: The GroAtom object.
+        Raises:
+            ValueError: If the atom is not found or multiple atoms with the same index exist.
+        """
         atoms = self.find_atom(index)
 
         if len(atoms) == 0:
@@ -215,17 +331,34 @@ class GroFile(IMolecule[GroAtom]):
 
     @override
     def translate(self, coordinate: np.ndarray):
+        """
+        Translates all atoms in the GRO file by a given vector.
+        Args:
+            coordinate (np.ndarray): The translation vector.
+        """
         for atom in self.atoms:
             atom.coordinate += coordinate
 
     @override
     def rotate(self, rotation: Rotation):
+        """
+        Rotates all atoms in the GRO file by a given rotation.
+        Args:
+            rotation (Rotation): The rotation object.
+        """
         for atom in self.atoms:
             atom.coordinate = rotation.apply(atom.coordinate)
 
     @override
     @classmethod
     def make(cls, atoms: list[AtomBase]) -> "GroFile":
+        """
+        Creates a GroFile object from a list of AtomBase objects.
+        Args:
+            atoms (list[AtomBase]): A list of AtomBase objects.
+        Returns:
+            GroFile: A new GroFile instance.
+        """
         gro = cls("MOL", [], 0, 0, 0)
         if isinstance(atoms[0], GroAtom):
             gro.atoms = atoms
@@ -238,7 +371,10 @@ class GroFile(IMolecule[GroAtom]):
 
     def generate_ndx(self, path: str) -> None:
         """
-        generate index file for gromacs. It will separate into groups based on residue number
+        Generates a GROMACS index file (.ndx) based on residue numbers.
+        Atoms are grouped by residue, and each group is written to the index file.
+        Args:
+            path (str): The path to save the index file.
         """
         if not path.endswith(".ndx"):
             path = path + ".ndx"
@@ -256,6 +392,7 @@ class GroFile(IMolecule[GroAtom]):
                 if line_length >= 10:  # Split lines after 10 indices
                     f.write("\n")
                     line_length = 0
+
 
 
 if __name__ == "__main__":

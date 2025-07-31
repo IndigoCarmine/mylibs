@@ -1,9 +1,17 @@
+"""
+This module provides a type checking decorator for functions.
+Currently, the type checking functionality is disabled.
+"""
 import functools
 import inspect
 
 
 # 引数・戻り値の型チェックを行うデコレータ。
 def type_check(func):
+    """
+    A decorator for type checking function arguments and return values.
+    Currently, this decorator is disabled and does not perform type checks.
+    """
     # 一旦機能しないようにしておく。
 
     @functools.wraps(func)

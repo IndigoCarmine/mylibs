@@ -1,3 +1,7 @@
+"""
+This module provides functions for constructing complex molecular assemblies,
+specifically rosette and oligorosette structures, from individual molecular monomers.
+"""
 import copy
 
 import numpy as np
@@ -11,10 +15,17 @@ def make_rosette[
     monomer: T, n: int, size: float, angle: float, degree: bool = True
 ) -> molecules.Substructure[T]:
     """
-    make rosette from monomer
-    n: number of monomer
-    size: diamiter of circle setting monomer top atom
-    angle: angle between monomer Otop=C vector and normal vector of the circle
+    Generates a rosette structure from a given monomer.
+    The monomers are arranged in a circle, with each monomer rotated by a specified angle.
+    Args:
+        monomer (T): The monomer molecule to use.
+        n (int): The number of monomers in the rosette.
+        size (float): The diameter of the circle on which the monomer's top atom is placed.
+        angle (float): The angle (in degrees or radians) between the monomer's Otop=C vector
+                       and the normal vector of the circle.
+        degree (bool): If True, `angle` is interpreted as degrees; otherwise, radians.
+    Returns:
+        molecules.Substructure[T]: A Substructure object representing the rosette.
     """
     rosette = molecules.Substructure(
         [copy.deepcopy(monomer) for i in range(n)])
@@ -40,9 +51,14 @@ def make_rosette2[T: molecules.IMolecule](
         monomer: T, n: int, size: float
 ) -> molecules.Substructure[T]:
     """
-    make rosette from monomer
-    n: number of monomer
-    size: diamiter of circle setting monomer top atom
+    Generates a rosette structure from a given monomer.
+    The monomers are arranged in a circle, with each monomer rotated radially.
+    Args:
+        monomer (T): The monomer molecule to use.
+        n (int): The number of monomers in the rosette.
+        size (float): The radius of the circle on which the monomer is placed.
+    Returns:
+        molecules.Substructure[T]: A Substructure object representing the rosette.
     """
     rosette: molecules.Substructure[T] = molecules.Substructure(
         [copy.deepcopy(monomer) for i in range(n)]
@@ -64,9 +80,14 @@ def make_half_rosette2[
     T: molecules.IMolecule
 ](monomer: T, n: int, size: float) -> molecules.Substructure[T]:
     """
-    make rosette from monomer
-    n: number of monomer (half of rosette)
-    size: diamiter of circle setting monomer top atom
+    Generates a half-rosette structure from a given monomer.
+    The monomers are arranged in a semi-circle.
+    Args:
+        monomer (T): The monomer molecule to use.
+        n (int): The number of monomers in the half-rosette.
+        size (float): The radius of the semi-circle on which the monomer is placed.
+    Returns:
+        molecules.Substructure[T]: A Substructure object representing the half-rosette.
     """
     rosette: molecules.Substructure[T] = molecules.Substructure(
         [copy.deepcopy(monomer) for i in range(n)]
@@ -95,11 +116,17 @@ def make_oligorosette[
     degree: bool = True,
 ) -> molecules.Substructure[T]:
     """
-    make stacked rosette from rosette
-    n: number of rosette
-    length: length of stacking
-    angle: how much rotate rosette
-    slip: slip distance of rosette
+    Creates a stacked oligorosette structure from a single rosette.
+    The rosettes are stacked along an axis, with optional rotation and slip to form a helix.
+    Args:
+        rosette (T): The base rosette molecule to stack.
+        n (int): The number of rosettes in the oligorosette.
+        length (float): The stacking distance between each rosette.
+        angle (float): The rotation angle between each stacked rosette.
+        slip (float): The slip distance between each stacked rosette, contributing to a helical structure.
+        degree (bool): If True, `angle` is interpreted as degrees; otherwise, radians.
+    Returns:
+        molecules.Substructure[T]: A Substructure object representing the oligorosette.
     """
     oligorosette = molecules.Substructure[T](
         [copy.deepcopy(rosette) for i in range(n)])

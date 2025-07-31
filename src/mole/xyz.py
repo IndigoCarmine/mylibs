@@ -1,3 +1,8 @@
+"""
+This module provides classes for handling molecular structures in XYZ format.
+It includes functionalities for parsing, manipulating, and generating XYZ files,
+as well as converting from MOL2 files and generating Gaussian input files.
+"""
 import copy
 import os
 from dataclasses import dataclass
@@ -15,19 +20,32 @@ gaussian_param_default = """%NProcShared=24
 
 
 def format_float(f: float | int) -> str:
+    """
+    Formats a float or integer to a string with 6 decimal places.
+    Args:
+        f (float | int): The number to format.
+    Returns:
+        str: The formatted string.
+    """
     return "{:.6f}".format(f)
 
 
 @dataclass
 class XyzAtom(AtomBase):
-    """Atom class"""
+    """
+    Represents an atom in an XYZ file.
+    Inherits from AtomBase and adds an optional charge property.
+    """
 
     charge: Optional[float] = None  # charge of atom
 
 
 @dataclass
 class XyzMolecule(IMolecule):
-    """Molecule class"""
+    """
+    Represents a molecule in XYZ format.
+    Implements the IMolecule interface for common molecular operations.
+    """
 
     name: str  # custom name
     index: int
@@ -35,10 +53,26 @@ class XyzMolecule(IMolecule):
 
     @staticmethod
     def cast(mol: IMolecule) -> "XyzMolecule":
+        """
+        Casts a generic IMolecule object to an XyzMolecule object.
+        Args:
+            mol (IMolecule): The molecule to cast.
+        Returns:
+            XyzMolecule: The cast XyzMolecule object.
+        """
         return cast("XyzMolecule", mol)
 
     @classmethod
     def make_from(cls, mol: IMolecule, name: str, index: int) -> "XyzMolecule":
+        """
+        Creates an XyzMolecule from a generic IMolecule object.
+        Args:
+            mol (IMolecule): The source molecule.
+            name (str): The name for the new XyzMolecule.
+            index (int): The index for the new XyzMolecule.
+        Returns:
+            XyzMolecule: A new XyzMolecule instance.
+        """
         return cls(
             name,
             index,
@@ -51,7 +85,9 @@ class XyzMolecule(IMolecule):
     @override
     def translate(self, coordinate: np.ndarray):
         """
-        move molecule
+        Translates all atoms in the molecule by a given vector.
+        Args:
+            coordinate (np.ndarray): The translation vector.
         """
         for atom in self.children:
             atom.coordinate += coordinate
@@ -59,21 +95,40 @@ class XyzMolecule(IMolecule):
     @override
     def rotate(self, rotation: Rotation):
         """
-        rotate molecule
+        Rotates all atoms in the molecule by a given rotation.
+        Args:
+            rotation (Rotation): The rotation object.
         """
         for atom in self.children:
             atom.coordinate = rotation.apply(atom.coordinate)
 
     @override
     def get_children(self) -> list[XyzAtom]:
+        """
+        Returns a list of all atoms (children) in the molecule.
+        """
         return self.children
 
     @override
     def get_child(self, index) -> XyzAtom:
+        """
+        Returns a specific atom (child) by its index.
+        Args:
+            index (int): The index of the atom to retrieve.
+        Returns:
+            XyzAtom: The XyzAtom object.
+        """
         return self.children[index]
 
     @classmethod
     def make(cls, atoms: list[AtomBase]):
+        """
+        Factory method to create a new XyzMolecule instance from a list of AtomBase objects.
+        Args:
+            atoms (list[AtomBase]): A list of AtomBase objects.
+        Returns:
+            XyzMolecule: A new XyzMolecule instance.
+        """
         return cls(
             "molecule",
             0,
@@ -82,14 +137,21 @@ class XyzMolecule(IMolecule):
 
     @staticmethod
     def _plane(X: tuple[float, float, float], a, b, c, d) -> float:
-        """plane function"""
+        """
+        Calculates the value of a plane equation at a given point.
+        Args:
+            X (tuple[float, float, float]): The 3D coordinates (x, y, z).
+            a, b, c, d: Coefficients of the plane equation (ax + by + cz + d = 0).
+        Returns:
+            float: The value of the plane equation at X.
+        """
         return a * X[0] + b * X[1] + c * X[2] + d
 
     def inner_move_to_xz_plane(self, target_atoms: list[XyzAtom]):
         """
-        move molecule to xz plane
-        fit plane to target_atoms and move molecule
-        so that the plane is equal to xz plane
+        Moves the molecule so that a plane fitted to the target atoms aligns with the xz-plane.
+        Args:
+            target_atoms (list[XyzAtom]): A list of atoms to use for fitting the plane.
         """
         popt: list[float] = [0, 0, 0, 0]
         x = np.array([atom.coordinate for atom in target_atoms]).T
@@ -103,15 +165,20 @@ class XyzMolecule(IMolecule):
 
     def get_inner_center(self) -> np.ndarray:
         """
-        return center of molecule
-        it will be calculated as average of all atoms coordinate
+        Calculates and returns the geometric center of the molecule (average of all atom coordinates).
+        Returns:
+            np.ndarray: The 3D coordinates of the center.
         """
         return np.mean([atom.coordinate for atom in self.children], axis=0)
 
     @classmethod
     def from_xyz_file(cls, path: str):
         """
-        load xyz file
+        Loads an XyzMolecule object from an XYZ file.
+        Args:
+            path (str): The path to the XYZ file.
+        Returns:
+            XyzMolecule: A new XyzMolecule instance.
         """
         name: str | None = None
         atom_list: list[XyzAtom] = []
@@ -131,7 +198,12 @@ class XyzMolecule(IMolecule):
     @classmethod
     def from_mol2_file(cls, path: str):
         """
-        load mol2 file
+        Loads an XyzMolecule object from a MOL2 file.
+        Parses atom information from the ATOM section of the MOL2 file.
+        Args:
+            path (str): The path to the MOL2 file.
+        Returns:
+            XyzMolecule: A new XyzMolecule instance.
         """
         name: str = os.path.basename(path).split(".")[0]
         atom_list: list[XyzAtom] = []
@@ -168,6 +240,11 @@ class XyzMolecule(IMolecule):
         return cls(name, 0, atom_list)
 
     def save_xyz_text(self) -> str:
+        """
+        Generates the content of the XYZ file as a single string.
+        Returns:
+            str: The formatted XYZ file content.
+        """
         # apply rotation and translation to atoms
         mol = copy.deepcopy(self)
         xyz_text = []
@@ -181,7 +258,9 @@ class XyzMolecule(IMolecule):
 
     def save_xyz(self, filename: str | None = None):
         """
-        save xyz file
+        Saves the current XyzMolecule object to an XYZ file.
+        Args:
+            filename (str | None): The path to save the XYZ file. If None, saves as `name.xyz`.
         """
         if filename is None:  # if filename is not given, save as name.xyz
             filename = self.name + ".xyz"
@@ -204,6 +283,12 @@ class XyzMolecule(IMolecule):
     def generate_gaussian_input(
         self, dir_path: str, gaussan_pram: str | None = None
     ) -> None:
+        """
+        Generates a Gaussian input file (.gjf) for the molecule.
+        Args:
+            dir_path (str): The directory path to save the GJF file.
+            gaussan_pram (str | None): Custom Gaussian parameters. If None, uses default.
+        """
         if gaussan_pram is None:
             gaussan_pram = gaussian_param_default.format(name=self.name)
 
@@ -227,24 +312,47 @@ class XyzMolecule(IMolecule):
         f.close()
 
     def sizeofAtoms(self) -> int:
-        """return number of atoms"""
+        """
+        Returns the number of atoms in the molecule.
+        """
         return len(self.children)
 
 
 class XyzSubstructure(Substructure):
+    """
+    Represents a collection of XyzMolecule objects as a substructure.
+    Provides methods for extracting XYZ files and generating Gaussian input files for the substructure.
+    """
     def __init__(self, elements: list[XyzMolecule], name: str):
+        """
+        Initializes an XyzSubstructure object.
+        Args:
+            elements (list[XyzMolecule]): A list of XyzMolecule objects forming the substructure.
+            name (str): The name of the substructure.
+        """
         self.molecules: list[XyzMolecule] = elements
         self.name = name
 
     @classmethod
     def from_Substructure(cls, sub: Substructure):
+        """
+        Creates an XyzSubstructure from a generic Substructure object.
+        Args:
+            sub (Substructure): The source Substructure.
+        Returns:
+            XyzSubstructure: A new XyzSubstructure instance.
+        """
         children: list[XyzMolecule] = sub.get_children()
         return cls(
             [XyzMolecule.make_from(mol, mol.name, mol.index) for mol in children], ""
         )
 
     def extract_xyz(self, filename: str) -> None:
-        """extract xyz file"""
+        """
+        Extracts all atoms from the substructure and saves them to a single XYZ file.
+        Args:
+            filename (str): The path to save the XYZ file.
+        """
         temp_agg = copy.deepcopy(self)
 
         # make file
@@ -269,13 +377,11 @@ class XyzSubstructure(Substructure):
         self, dir_path: str, gaussan_pram: str | None = None, fragment=False
     ) -> None:
         """
-        generate gaussian input file
-
-        fragment: if True, set fragment index like this
-        (for Counterpoise method) :
-
-        H (Fragment=1) 0.000000000000 0.000000000000 0.000000000000
-
+        Generates a Gaussian input file (.gjf) for the substructure.
+        Args:
+            dir_path (str): The directory path to save the GJF file.
+            gaussan_pram (str | None): Custom Gaussian parameters. If None, uses default.
+            fragment (bool): If True, includes fragment information for each molecule.
         """
 
         if gaussan_pram is None:
@@ -310,7 +416,6 @@ class XyzSubstructure(Substructure):
         else:
             # write charge and spin multiplicity
             f.write("0 1\n")
-            # write number of atoms
             for molecule in temp_agg.molecules:
                 for atom in molecule.children:
                     f.write(

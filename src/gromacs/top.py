@@ -1,7 +1,16 @@
+"""
+This module provides functions for modifying and loading GROMACS topology files (.top).
+It focuses on manipulating the [ molecules ] section of the topology file.
+"""
 def modify_top(path: str, molecules: dict[str, int]):
     """
-    This Function has not yet been coded.
-    Modify the molecules section on topology file.
+    Modifies the [ molecules ] section of a GROMACS topology file.
+    This function is currently not implemented.
+    Args:
+        path (str): The path to the topology file.
+        molecules (dict[str, int]): A dictionary where keys are molecule names and values are their counts.
+    Raises:
+        NotImplementedError: This function is not yet implemented.
     """
     raise NotImplementedError
     lines = []
@@ -31,8 +40,14 @@ def modify_top(path: str, molecules: dict[str, int]):
 
 def load_molecules_from_file(path: str) -> dict[str, int]:
     """
-    This Function has not yet been coded.
-    Load molecules from a file.
+    Loads molecule counts from the [ molecules ] section of a GROMACS topology file.
+    This function is currently not implemented.
+    Args:
+        path (str): The path to the topology file.
+    Returns:
+        dict[str, int]: A dictionary where keys are molecule names and values are their counts.
+    Raises:
+        NotImplementedError: This function is not yet implemented.
     """
     raise NotImplementedError
     with open(path, "r") as f:
