@@ -3,6 +3,7 @@ This module provides classes for handling molecular structures in XYZ format.
 It includes functionalities for parsing, manipulating, and generating XYZ files,
 as well as converting from MOL2 files and generating Gaussian input files.
 """
+
 import copy
 import os
 from dataclasses import dataclass
@@ -38,6 +39,14 @@ class XyzAtom(AtomBase):
     """
 
     charge: Optional[float] = None  # charge of atom
+
+    @override
+    def __eq__(self, value):
+        if isinstance(value, XyzAtom):
+            return super().__eq__(value) and self.charge == value.charge
+        elif isinstance(value, AtomBase):
+            return super().__eq__(value)
+        return False
 
 
 @dataclass
@@ -323,6 +332,7 @@ class XyzSubstructure(Substructure):
     Represents a collection of XyzMolecule objects as a substructure.
     Provides methods for extracting XYZ files and generating Gaussian input files for the substructure.
     """
+
     def __init__(self, elements: list[XyzMolecule], name: str):
         """
         Initializes an XyzSubstructure object.

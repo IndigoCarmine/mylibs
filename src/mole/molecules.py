@@ -2,6 +2,7 @@
 This module defines abstract base classes and interfaces for representing and manipulating molecular structures.
 It provides a foundation for handling atoms, molecules, and substructures in a generic way.
 """
+
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from typing import Iterable
@@ -49,6 +50,7 @@ class AtomBase:
     Base class for representing an atom.
     Contains fundamental properties like symbol, index, and 3D coordinate.
     """
+
     symbol: str
     index: int
     coordinate: np.ndarray
@@ -64,12 +66,28 @@ class AtomBase:
         """
         return cls(atom.symbol, atom.index, atom.coordinate)
 
+    def __eq__(self, value):
+        """
+        Checks equality with another AtomBase instance.
+        Args:
+            value (AtomBase): The atom to compare with.
+        Returns:
+            bool: True if both atoms have the same symbol and index, False otherwise.
+        """
+        return (
+            isinstance(value, AtomBase)
+            and self.symbol == value.symbol
+            and self.index == value.index
+            and np.array_equal(self.coordinate, value.coordinate)
+        )
+
 
 class IMolecule[Atom: AtomBase](IObject):
     """
     Interface for molecular objects.
     Defines methods for accessing constituent atoms and creating new molecular instances.
     """
+
     @abstractmethod
     def get_children(self) -> list[Atom]:
         """
@@ -104,12 +122,19 @@ class IMolecule[Atom: AtomBase](IObject):
         """
         return self.make(self.get_children()[start:end])
 
+    def __eq__(self, value):
+        return isinstance(value, IMolecule) and np.array_equal(
+            [atom.coordinate for atom in self.get_children()],
+            [atom.coordinate for atom in value.get_children()],
+        )
+
 
 class Substructure[A: AtomBase, T: IMolecule[A]](IObject, Iterable[T]):
     """
     Represents a collection of molecules as a substructure.
     Allows for collective translation and rotation of its constituent molecules.
     """
+
     molecules: list[T]
 
     def __init__(self, elements: list[T]):
@@ -156,8 +181,7 @@ class Substructure[A: AtomBase, T: IMolecule[A]](IObject, Iterable[T]):
         Returns:
             list[A]: A flattened list of all atoms.
         """
-        return [atom for molecule in self.molecules
-                for atom in molecule.get_children()]
+        return [atom for molecule in self.molecules for atom in molecule.get_children()]
 
     def as_molecule(self, type: type[IMolecule]) -> T:
         """
