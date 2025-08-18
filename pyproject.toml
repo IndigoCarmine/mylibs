@@ -18,3 +18,7 @@ dependencies = ["pydantic", "numpy", "pandas", "matplotlib", "scipy", "annotated
 dev = ["build", "twine", "mypy"]
 [project.urls]
 "Homepage" = "https://chem.tf.chiba-u.jp/yagai/index.html"
+
+
+[tool.setuptools.package-data]
+"gromacs" = ["src/gromacs/DefaultFiles/*"]
