@@ -21,4 +21,4 @@ dev = ["build", "twine", "mypy"]
 
 
 [tool.setuptools.package-data]
-"gromacs" = ["src/gromacs/DefaultFiles/*"]
+"gromacs" = ["DefaultFiles/*"]
