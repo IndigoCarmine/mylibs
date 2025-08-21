@@ -3,6 +3,7 @@ This module defines abstract and concrete classes for setting up and managing GR
 It includes functionalities for energy minimization (EM), molecular dynamics (MD),
 solvation, and file control operations, along with utilities for generating simulation scripts.
 """
+
 from abc import ABC, abstractmethod
 import warnings
 from pydantic.dataclasses import dataclass, Field
@@ -41,6 +42,7 @@ class Calclation(ABC):
     Abstract base class for all GROMACS calculation types.
     Defines the interface for generating calculation files and retrieving the calculation name.
     """
+
     def __init__(self):
         raise Exception("Abstract class cannot be instantiated")
 
@@ -134,6 +136,7 @@ class MDType(enum.Enum):
     """
     Defines different types of Molecular Dynamics (MD) simulations.
     """
+
     v_rescale_c_rescale = 1
     nose_hoover_parinello_rahman = 2
     berendsen = 3
@@ -417,6 +420,7 @@ class Solvation(Calclation):
     """
     A class to represent a solvation calculation, allowing control over the number of solvent molecules.
     """
+
     def __init__(
         self,
         solvent: str = "MCH",
@@ -573,6 +577,7 @@ class FileControl(Calclation):
     A class for performing file manipulation operations within GROMACS workflows.
     It allows defining custom shell commands to be executed.
     """
+
     def __init__(self, name: str, command: str):
         """
         Initializes the FileControl object.
@@ -656,7 +661,6 @@ class FileControl(Calclation):
         return cls(name, "\n".join(commands))
 
 
-
 @dataclass(kw_only=True)
 class BarMethod(Calclation):
     """
@@ -684,6 +688,7 @@ class BarMethod(Calclation):
         couple_lamda1 (str): Lambda state 1 coupling type.
         nstdhdl (int): Frequency to write dH/dL to the energy file.
     """
+
     type: MDType
     calculation_name: str
     nsteps: int = 10000
@@ -843,8 +848,22 @@ def launch(
             with open(os.path.join(dirname, name), "w", newline="\n") as f:
                 f.write(content)
 
+        script_content = """#!/bin/bash
+
+if [ -f "output.gro" ]; then
+    echo "output.gro already exists. This calculation is finished."
+    exit 0
+fi
+
+if ls ./*.pdb >/dev/null 2>&1; then
+    echo "this calculation has problems and this is already calculated."
+    exit 1
+fi
+"""
+
         # create a script to run the calculation
         with open(os.path.join(dirname, "run.sh"), "w", newline="\n") as f:
+            f.write(script_content)
             f.write("bash grommp.sh\n")
             f.write("bash mdrun.sh\n")
             if i != len(calculations) - 1:
@@ -873,6 +892,8 @@ def launch(
     # create a script to all the calculations
 
     with open(os.path.join(working_dir, "run.sh"), "w", newline="\n") as f:
+        f.write("#!/bin/bash\n")
+        f.write("set -e\n")
         for i, calc in enumerate(calculations):
             f.write(f"cd {str(i) + '_' + calc.name}\n")
             f.write("bash run.sh\n")

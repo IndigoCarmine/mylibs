@@ -24,4 +24,9 @@ else
 fi
 # end of alias support
 
-inner_gmx mdrun -deffnm output -v  |tee run.out 
+
+if [ -f "output.cpt" ]; then
+    inner_gmx mdrun -deffnm output -v -cpi output.cpt | tee run.out 
+else
+    inner_gmx mdrun -deffnm output -v | tee run.out 
+fi
