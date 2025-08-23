@@ -11,7 +11,20 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-dependencies = ["pydantic", "numpy", "pandas", "matplotlib", "scipy", "annotated-types", "pydantic-settings", "pydantic-core", "python-dotenv", "typing_extensions", "pyparsing"]
+dependencies = [
+    "pydantic",
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "scipy",
+    "annotated-types",
+    "pydantic-settings",
+    "pydantic-core",
+    "python-dotenv",
+    "typing_extensions",
+    "pyparsing",
+    "lmfit>=1.3.4",
+]
 
 
 [project.optional-dependencies]

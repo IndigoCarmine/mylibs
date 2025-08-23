@@ -105,7 +105,7 @@ class IMolecule[Atom: AtomBase](IObject):
         pass
 
     @classmethod
-    def make(cls, atoms: list[Atom]):
+    def make(cls, atoms: list[AtomBase]):
         """
         Factory method to create a new molecule instance from a list of atoms.
         """
@@ -122,7 +122,7 @@ class IMolecule[Atom: AtomBase](IObject):
         """
         return self.make(self.get_children()[start:end])
 
-    def __eq__(self, value):
+    def __eq__(self, value: object) -> bool:
         return isinstance(value, IMolecule) and np.array_equal(
             [atom.coordinate for atom in self.get_children()],
             [atom.coordinate for atom in value.get_children()],

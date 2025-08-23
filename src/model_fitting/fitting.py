@@ -23,7 +23,7 @@ def isodesmic(X: np.number | npt.NDArray[np.number], K: np.number | float | int)
     return (2 * B + 1 - (4 * B + 1) ** 0.5) / (2 * B)
 
 
-def cubic(b, c, d):
+def cubic(b:np.number | npt.NDArray[np.number], c:np.number | npt.NDArray[np.number], d:np.number | npt.NDArray[np.number]):
     """
     Solves a cubic equation of the form x^3 + bx^2 + cx + d = 0 using Cardano's formula.
     Args:

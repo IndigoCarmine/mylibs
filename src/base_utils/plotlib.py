@@ -196,7 +196,7 @@ class XYData:
 
     def get_y_at_range(
         self, xmin: float = -np.inf, xmax: float = np.inf
-    ) -> npt.NDArray[n56]:
+    ) -> npt.NDArray[FLOAT]:
         """
         Returns the Y values within a specified X range.
         """
@@ -245,10 +245,10 @@ class XYData:
         """
         Returns a new XYData object with Y values normalized to a range of 0 to 1.
         """
-        Y = self.Y - np.min(self.Y)
-        Y = Y / np.max(Y)
+        y = self.Y - np.min(self.Y)
+        y = y / np.max(y)
         print("scaling factor is", 1 / np.max(self.Y))
-        return XYData(self.X, Y, self.dataLabel, self.Title)
+        return XYData(self.X, y, self.dataLabel, self.Title)
 
 
 @dataclass
@@ -437,7 +437,7 @@ def load_jasco_data(p: str) -> list[XYData]:
     if isnan(data[0][0]):
         # is 2d data
         return [
-            XYData(data[0].values[1:-1], data[i].values[1:-1], label, data[i].values[0])
+            XYData(data[0].to_numpy()[1:-1], data[i].to_numpy()[1:-1], label, str(data[i].values[0]))
             for i in range(1, len(data.columns))
         ][0:-1]
     else:
@@ -482,7 +482,7 @@ def load_dat(
     array = pd.DataFrame(data).astype(float)
 
     return XYData(
-        array[0].values, array[1].values, DataLabel(x_label, x_unit, y_label, y_unit)
+        array[0].to_numpy(), array[1].to_numpy(), DataLabel(x_label, x_unit, y_label, y_unit)
     )
 
 
@@ -575,7 +575,7 @@ def plot1d(
     Allows setting X-axis range.
     """
     plot_simple(ax, data, plot_option, style=style)
-    ax.set_xlim(float(np.min(data.X)), flaot(np.max(data.X)))
+    ax.set_xlim(float(np.min(data.X)), float(np.max(data.X)))
     if range is not None:
         ax.set_xlim(range)
 

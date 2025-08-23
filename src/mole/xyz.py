@@ -41,7 +41,7 @@ class XyzAtom(AtomBase):
     charge: Optional[float] = None  # charge of atom
 
     @override
-    def __eq__(self, value):
+    def __eq__(self, value: object) -> bool:
         if isinstance(value, XyzAtom):
             return super().__eq__(value) and self.charge == value.charge
         elif isinstance(value, AtomBase):
@@ -50,7 +50,7 @@ class XyzAtom(AtomBase):
 
 
 @dataclass
-class XyzMolecule(IMolecule):
+class XyzMolecule(IMolecule[XyzAtom]):
     """
     Represents a molecule in XYZ format.
     Implements the IMolecule interface for common molecular operations.
@@ -61,7 +61,7 @@ class XyzMolecule(IMolecule):
     children: list[XyzAtom]  # list of atoms or molecules
 
     @staticmethod
-    def cast(mol: IMolecule) -> "XyzMolecule":
+    def cast(mol: IMolecule[XyzAtom]) -> "XyzMolecule":
         """
         Casts a generic IMolecule object to an XyzMolecule object.
         Args:
@@ -72,7 +72,7 @@ class XyzMolecule(IMolecule):
         return cast("XyzMolecule", mol)
 
     @classmethod
-    def make_from(cls, mol: IMolecule, name: str, index: int) -> "XyzMolecule":
+    def make_from(cls, mol: IMolecule[XyzAtom], name: str, index: int) -> "XyzMolecule":
         """
         Creates an XyzMolecule from a generic IMolecule object.
         Args:
@@ -119,7 +119,7 @@ class XyzMolecule(IMolecule):
         return self.children
 
     @override
-    def get_child(self, index) -> XyzAtom:
+    def get_child(self, index: int) -> XyzAtom:
         """
         Returns a specific atom (child) by its index.
         Args:
@@ -128,6 +128,7 @@ class XyzMolecule(IMolecule):
             XyzAtom: The XyzAtom object.
         """
         return self.children[index]
+
 
     @classmethod
     def make(cls, atoms: list[AtomBase]):
@@ -145,7 +146,7 @@ class XyzMolecule(IMolecule):
         )
 
     @staticmethod
-    def _plane(X: tuple[float, float, float], a, b, c, d) -> float:
+    def _plane(X: tuple[float, float, float], a: float, b: float, c: float, d: float) -> float:
         """
         Calculates the value of a plane equation at a given point.
         Args:
@@ -165,8 +166,8 @@ class XyzMolecule(IMolecule):
         popt: list[float] = [0, 0, 0, 0]
         x = np.array([atom.coordinate for atom in target_atoms]).T
         y = np.array([0 for _ in target_atoms])
-        popt, _ = curve_fit(f=XyzMolecule._plane, xdata=x, ydata=y)
-        a, b, c, d = popt
+        popt, _ = curve_fit(f=XyzMolecule._plane, xdata=x, ydata=y)  # type: ignore
+        a, b, c, d = popt  # type: ignore
         # fit to xy plane
         self.rotate(Rotation.from_euler("x", np.arctan(-b / c), degrees=True))
         self.rotate(Rotation.from_euler("y", np.arctan(-a / c), degrees=True))
@@ -256,7 +257,7 @@ class XyzMolecule(IMolecule):
         """
         # apply rotation and translation to atoms
         mol = copy.deepcopy(self)
-        xyz_text = []
+        xyz_text: list[str] = []
         xyz_text.append(str(self.children.__len__()))
         xyz_text.append(self.name)
         for atom in mol.children:
@@ -327,7 +328,7 @@ class XyzMolecule(IMolecule):
         return len(self.children)
 
 
-class XyzSubstructure(Substructure):
+class XyzSubstructure(Substructure[XyzAtom, XyzMolecule]):
     """
     Represents a collection of XyzMolecule objects as a substructure.
     Provides methods for extracting XYZ files and generating Gaussian input files for the substructure.
@@ -344,7 +345,7 @@ class XyzSubstructure(Substructure):
         self.name = name
 
     @classmethod
-    def from_Substructure(cls, sub: Substructure):
+    def from_Substructure(cls, sub: Substructure[XyzAtom, XyzMolecule]):
         """
         Creates an XyzSubstructure from a generic Substructure object.
         Args:
@@ -384,7 +385,7 @@ class XyzSubstructure(Substructure):
         f.close()
 
     def generate_gaussian_input(
-        self, dir_path: str, gaussan_pram: str | None = None, fragment=False
+        self, dir_path: str, gaussan_pram: str | None = None, fragment: bool = False
     ) -> None:
         """
         Generates a Gaussian input file (.gjf) for the substructure.

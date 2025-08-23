@@ -4,7 +4,7 @@ It includes functions for joining multiple functions, flattening nested lists,
 and finding files based on various criteria.
 """
 
-import os
+
 from typing import Callable, Any
 
 # basic pipeline functions #
