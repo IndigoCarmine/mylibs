@@ -3,6 +3,7 @@ This module provides a comprehensive set of tools for creating and customizing p
 It includes functionalities for defining plot styles, handling data labels, managing plot options,
 loading various data formats (JASCO, XVG, DAT), and generating 1D and 2D plots.
 """
+
 import csv
 import os
 from typing import Optional
@@ -41,6 +42,7 @@ class Style(Enum):
     """
     Defines different plotting styles for various output formats (e.g., paper, presentation).
     """
+
     paper = 0
     presentation_black = 1
     presentation_white = 2
@@ -53,6 +55,7 @@ class Color:
     Manages colors for different plotting styles.
     Allows defining a set of colors that adapt to various output contexts (e.g., paper, presentation).
     """
+
     colordict: dict[Style, str | None]
 
     def __init__(self, colordict: dict[Style, str | None]):
@@ -136,6 +139,7 @@ class DataLabel:
     """
     Represents labels and units for X and Y axes of a plot.
     """
+
     X_label: Optional[str]
     X_unit: Optional[str]
     Y_label: Optional[str]
@@ -146,6 +150,7 @@ class DataLabels(Enum):
     """
     Predefined DataLabel instances for common spectroscopic data types.
     """
+
     UV = DataLabel("wavelength", "nm", "absorbance", "-")
     FL = DataLabel("wavelength", "nm", "intensity", "-")
     CD = DataLabel("wavelength", "nm", "mdeg", "-")
@@ -159,6 +164,7 @@ class XYData:
     Represents a set of X-Y data points with associated labels and an optional title.
     Provides methods for data manipulation such as renaming, shifting, scaling, and normalization.
     """
+
     X: npt.NDArray[np.number]
     Y: npt.NDArray[np.number]
     dataLabel: DataLabel
@@ -248,6 +254,7 @@ class PlotOption:
     """
     Defines options for plotting individual data series, such as color, marker, and line style.
     """
+
     color: Color
     marker: str | None
     markersize: float
@@ -259,6 +266,7 @@ class PlotOptions:
     """
     Predefined PlotOption instances for common plotting scenarios.
     """
+
     paper = PlotOption(colors["monotone"], None, 1, "-", 1.5)
     presentation = PlotOption(colors["monotone"], "o", 2, "-", 3)
 
@@ -268,6 +276,7 @@ class FigureOption:
     """
     Defines options for the overall figure, including size, plot options, and background.
     """
+
     size: tuple[float, float]
     plot_option: PlotOption
     is_white_background: bool = True
@@ -281,6 +290,7 @@ class FigureOptions:
     """
     Predefined FigureOption instances for common figure setups.
     """
+
     papar = FigureOption(default_figure_size, PlotOptions.paper)
     presentation_white = FigureOption(
         default_figure_size, PlotOptions.presentation, is_white_background=True
@@ -339,7 +349,6 @@ def _load_jasco_data(path: str) -> tuple[DataLabel, pd.DataFrame]:
     array = pd.DataFrame(data).astype(float)
 
     return label, array
-
 
 
 @deprecated("Use load_data instead")
@@ -477,11 +486,41 @@ def load_dat(
 
 
 @typecheck.type_check
+def load_csv(path: str) -> list[XYData]:
+    """
+    Loads data from a CSV file and returns it as a list of XYData objects.
+    Assumes the first column is the X-axis data and subsequent columns are Y-axis data.
+    """
+
+    df = pd.read_csv(path)
+    if len(df.columns) < 2:
+        raise ValueError("CSV file must have at least two columns")
+
+    columns = df.columns.tolist()
+    x = columns[0]
+    y = columns[1]
+    if x == "WAVELENGTH" and y == "ABSORBANCE":
+        # UV-Vis data
+        label = DataLabels.UV.value
+    elif x == "WAVELENGTH" and y == "INTENSITY":
+        # Fluorescence data
+        label = DataLabels.FL.value
+    elif x == "WAVENUMBER" and y == "ABSORBANCE":
+        # IR data
+        label = DataLabels.IR.value
+    else:
+        label = DataLabel(x, "", y, "")
+
+    return convert_from_df(df, label)
+
+
+@typecheck.type_check
 def slice_data(data: list[XYData], x_value: float, new_x_values: list[float]) -> XYData:
     """
     Slices a list of XYData objects at a specific X-value and interpolates Y-values
     onto a new set of X-values.
     """
+
     def nearest(array, value):
         idx = (np.abs(array - value)).argmin()
         return idx
