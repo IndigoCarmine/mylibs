@@ -65,6 +65,9 @@ with open(top_old, "r") as file:
                 is_molecules_section = True
             elif is_molecules_section:
                 inner = line.split(";")[0].split()
+                if len(inner) == 0:
+                    newfile.write(line)
+                    continue
                 # check 1st is molecule name, 2nd is number
                 if len(inner) == 2 and inner[0].isalpha() and inner[1].isdigit():
                     newfile.write(line)

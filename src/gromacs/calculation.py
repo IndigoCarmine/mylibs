@@ -542,7 +542,7 @@ class SolvationSCP216(Calclation):
             "top_mod.py": defaut_file_content("top_mod.py"),
             "mdrun.sh": _gmx_alias
             + "\n\n\n"
-            + "inner_gmx solvate -cp input.gro -cs spc216.gro -o output.gro -p dummy.top"
+            + "inner_gmx solvate -cp input.gro -cs spc216.gro -o output.gro -p dummy.top \n\n\n"
             + "python top_mod.py",
         }
 
