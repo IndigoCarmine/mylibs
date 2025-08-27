@@ -537,10 +537,13 @@ class SolvationSCP216(Calclation):
             dict[str, str]: A dictionary where keys are file names and values are file contents.
         """
         return {
+            "dummy.top": "",
             "grommp.sh": "echo 'this is a dummy file for automation'",
+            "top_mod.py": defaut_file_content("top_mod.py"),
             "mdrun.sh": _gmx_alias
             + "\n\n\n"
-            + "inner_gmx solvate -cp input.gro -cs spc216.gro -o output.gro -p topo.top",
+            + "inner_gmx solvate -cp input.gro -cs spc216.gro -o output.gro -p dummy.top"
+            + "python top_mod.py",
         }
 
     @property
