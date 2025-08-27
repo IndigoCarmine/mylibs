@@ -202,6 +202,6 @@ def launch(
 ): ...
 def generate_stepbystep_runfile(
     init_structures: list[str],
-    calculation_name_and_isparaleljob: tuple[list[str], bool],
+    calculation_name_and_isparaleljob: list[tuple[str, bool]],
     calc_path: str,
 ): ...
