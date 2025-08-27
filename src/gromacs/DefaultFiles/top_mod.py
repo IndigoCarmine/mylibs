@@ -76,6 +76,8 @@ with open(top_old, "r") as file:
                     newfile.write(additional_line)
                     is_molecules_section = False
                     newfile.write(line)
+            else:
+                newfile.write(line)
 
         # if the molecules section is at the end of the file
         if is_molecules_section:
