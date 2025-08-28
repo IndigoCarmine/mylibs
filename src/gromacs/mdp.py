@@ -2,6 +2,7 @@
 This module provides a class for parsing, manipulating, and exporting GROMACS MDP (Molecular Dynamics Parameters) files.
 It also defines default MDP parameters for common simulation types like energy minimization (EM) and molecular dynamics (MD).
 """
+
 from typing import Callable
 import copy
 
@@ -10,6 +11,7 @@ class _Parameter:
     """
     Internal class to represent an MDP parameter with a key and an optional checker function.
     """
+
     def __init__(self, key: str, checker: Callable[[str], bool]):
         self.key = key
         self.checker = checker
@@ -20,6 +22,7 @@ class MDParameters:
     A class to manage GROMACS MDP (Molecular Dynamics Parameters) settings.
     It allows loading, modifying, and exporting MDP parameters.
     """
+
     def __init__(self, data: dict[str, str] = {}, ignore_deepcopy=False):
         """
         Initializes the MDParameters object.
@@ -159,7 +162,6 @@ EM_MDP = {
     "pbc": "xyz",
 }
 V_RESCALE_C_RESCALE_MDP = {
-    "cpp": "/usr/bin/cpp",
     "integrator": "md",
     "dt": "0.002",
     "nsteps": "nsteps",
@@ -189,6 +191,40 @@ V_RESCALE_C_RESCALE_MDP = {
     "compressibility": "4.5e-05",
     "gen_vel": "gen_vel",
     "gen_temp": "gen_temp",
+    "pbc": "xyz",
+}
+
+
+NOSE_HOOVER_PARINELLO_RAHMAN_MDP = {
+    "integrator": "md",
+    "dt": "0.002",
+    "nsteps": "10000",
+    "nstxout": "5000",
+    "nstvout": "1000",
+    "nstfout": "1000",
+    "nstenergy": "1000",
+    "cutoff-scheme": "verlet",
+    "continuation": "yes",
+    "constraints": "h-bonds",
+    "constraint_algorithm": "LINCS",
+    "nstlist": "10",
+    "ns_type": "grid",
+    "tcoupl": "nose-hoover",
+    "tc_grps": "system",
+    "tau_t": "1",
+    "ref_t": "300",
+    "rlist": "1.4",
+    "coulombtype": "PME",
+    "rcoulomb": "1.4",
+    "fourierspacing": "0.30",
+    "pme_order": "4",
+    "vdwtype": "Cut-off",
+    "rvdw": "1.4",
+    "Pcoupl": "Parrinello-Rahman",
+    "tau_p": "5.0",
+    "ref_p": "1",
+    "compressibility": "2.0e-05",
+    "gen_vel": "no",
     "pbc": "xyz",
 }
 

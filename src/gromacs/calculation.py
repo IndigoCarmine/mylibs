@@ -280,6 +280,18 @@ class MD(Calclation):
 
             case MDType.nose_hoover_parinello_rahman:
                 raise NotImplementedError("parameters are not linked to the mdp file")
+                options_txt = " -maxwarn " + str(self.maxwarn)
+                mdp_file = (
+                    mdp.MDParameters(mdp.NOSE_HOOVER_PARINELLO_RAHMAN_MDP)
+                    .add_or_update("nsteps", self.nsteps)
+                    .add_or_update("nstxout", self.nstout)
+                    .add_or_update("nstvout", self.nstout)
+                    .add_or_update("nstfout", self.nstout)
+                    .add_or_update("nstenergy", self.nstout)
+                    .add_or_update("gen_vel", self.gen_vel)
+                    .add_or_update("ref_t", self.temperature)
+                    .add_or_update("gen_temp", self.temperature)
+                )
                 return {
                     "setting.mdp": defaut_file_content(
                         "nose_hoover_parinello_rahman.mdp"
