@@ -169,6 +169,7 @@ top_old = r"topo_old.top"
 os.rename(top, top_old)
 is_molecules_section = False
 
+additional_line = "MCH             {}\n".format(residues)
 with open(top_old, "r") as file:
     with open(top, "w") as newfile:
         for line in file:
@@ -178,15 +179,23 @@ with open(top_old, "r") as file:
             elif line.startswith("[ molecules ]"):
                 newfile.write(line)
                 is_molecules_section = True
-            elif (
-                line.startswith("[") and is_molecules_section
-            ):  # end of molecules section
-                newfile.write("MCH             {}\n".format(residues))
-                newfile.write(line)
-                is_molecules_section = False
+            elif is_molecules_section:
+                inner = line.split(";")[0].split()
+                if len(inner) == 0:
+                    newfile.write(line)
+                    continue
+                # check 1st is molecule name, 2nd is number
+                if len(inner) == 2 and inner[0].isalpha() and inner[1].isdigit():
+                    newfile.write(line)
+                else:
+                    # end of molecules section
+                    newfile.write(additional_line)
+                    is_molecules_section = False
+                    newfile.write(line)
             else:
                 newfile.write(line)
+
         # if the molecules section is at the end of the file
         if is_molecules_section:
-            newfile.write("MCH             {}\n".format(residues))
+            newfile.write(additional_line)
             is_molecules_section = False
