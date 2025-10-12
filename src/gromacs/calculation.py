@@ -540,7 +540,7 @@ class SolvationSCP216(Calclation):
             "grommp.sh": "echo 'this is a dummy file for automation'",
             "mdrun.sh": _gmx_alias
             + "\n\n\n"
-            + "gmx solvate -cp input.gro -cs spc216.gro -o output.gro -p topo.top",
+            + "inner_gmx solvate -cp input.gro -cs spc216.gro -o output.gro -p topo.top",
         }
 
     @property
