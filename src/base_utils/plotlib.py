@@ -18,6 +18,8 @@ import pandas as pd
 from matplotlib.axes import Axes
 from typing_extensions import deprecated
 
+from ref_for_llm.deco import llm_public
+
 FLOAT = np.float64
 
 # matplotlib setting (スライドに直接貼っても問題ないようにするため)
@@ -37,7 +39,7 @@ poster_color_yellow = "#FFFF00"
 
 slide_color_orange = "#ff7b00"
 
-
+@llm_public()
 class Style(Enum):
     """
     Defines different plotting styles for various output formats (e.g., paper, presentation).
@@ -48,7 +50,7 @@ class Style(Enum):
     presentation_white = 2
     poster_black_highcontrast = 3
 
-
+@llm_public()
 @dataclass
 class Color:
     """
@@ -58,6 +60,7 @@ class Color:
 
     colordict: dict[Style, str | None]
 
+    @llm_public()
     def __init__(self, colordict: dict[Style, str | None]):
         self.colordict = colordict
 
@@ -67,6 +70,7 @@ class Color:
         """
         return self.colordict[style]
 
+    @llm_public()
     @classmethod
     def single_color(cls, color: str) -> "Color":
         """
@@ -145,7 +149,7 @@ class DataLabel:
     Y_label: Optional[str]
     Y_unit: Optional[str]
 
-
+@llm_public()
 class DataLabels(Enum):
     """
     Predefined DataLabel instances for common spectroscopic data types.
@@ -157,7 +161,7 @@ class DataLabels(Enum):
     IR = DataLabel("wavenumber", "cm-1", "absorbance", "-")
     XRD = DataLabel("2theta", "degree", "intensity", "-")
 
-
+@llm_public()
 @dataclass(frozen=True)
 class XYData:
     """
@@ -181,19 +185,19 @@ class XYData:
             )
         if len(self.X) == 0:
             raise ValueError("X and Y must not be empty")
-
+    @llm_public()
     def rename_labels(self, label: DataLabel) -> "XYData":
         """
         Returns a new XYData object with updated DataLabel.
         """
         return XYData(self.X, self.Y, label, self.Title)
-
+    @llm_public()
     def rename_title(self, title: str) -> "XYData":
         """
         Returns a new XYData object with an updated title.
         """
         return XYData(self.X, self.Y, self.dataLabel, title)
-
+    @llm_public()
     def get_y_at_range(
         self, xmin: float = -np.inf, xmax: float = np.inf
     ) -> npt.NDArray[FLOAT]:
@@ -202,45 +206,45 @@ class XYData:
         """
         mask = (self.X >= xmin) & (self.X <= xmax)
         return self.Y[mask]
-
+    @llm_public()
     def get_y_at_nearest_x(self, x: float) -> float:
         """
         Returns the Y value corresponding to the X value nearest to the given 'x'.
         """
         idx = np.argmin(np.abs(self.X - x))
         return self.Y[idx]
-
+    @llm_public()
     def xshift(self, shift: float) -> "XYData":
         """
         Returns a new XYData object with X values shifted by a given amount.
         """
         return XYData(self.X + shift, self.Y, self.dataLabel, self.Title)
-
+    @llm_public()
     def yshift(self, shift: float) -> "XYData":
         """
         Returns a new XYData object with Y values shifted by a given amount.
         """
         return XYData(self.X, self.Y + shift, self.dataLabel, self.Title)
-
+    @llm_public()
     def xscale(self, scale: float) -> "XYData":
         """
         Returns a new XYData object with X values scaled by a given factor.
         """
         return XYData(self.X * scale, self.Y, self.dataLabel, self.Title)
-
+    @llm_public()
     def yscale(self, scale: float) -> "XYData":
         """
         Returns a new XYData object with Y values scaled by a given factor.
         """
         return XYData(self.X, self.Y * scale, self.dataLabel, self.Title)
-
+    @llm_public()
     def clip(self, xmin: float, xmax: float) -> "XYData":
         """
         Returns a new XYData object with data clipped to a specified X range.
         """
         mask = (self.X >= xmin) & (self.X <= xmax)
         return XYData(self.X[mask], self.Y[mask], self.dataLabel, self.Title)
-
+    @llm_public()
     def normalize(self) -> "XYData":
         """
         Returns a new XYData object with Y values normalized to a range of 0 to 1.
@@ -250,7 +254,7 @@ class XYData:
         print("scaling factor is", 1 / np.max(self.Y))
         return XYData(self.X, y, self.dataLabel, self.Title)
 
-
+@llm_public()
 @dataclass
 class PlotOption:
     """
@@ -262,7 +266,6 @@ class PlotOption:
     markersize: float
     linestyle: str
     linewidth: float
-
 
 class PlotOptions:
     """
@@ -286,7 +289,6 @@ class FigureOption:
 
 
 default_figure_size = (4, 3)
-
 
 class FigureOptions:
     """
@@ -381,7 +383,7 @@ def load_2ddata(path: str) -> list[XYData]:
         for i in range(1, len(array.columns))
     ][0:-1]
 
-
+@llm_public()
 def load_xvgdata(path: str) -> XYData:
     """
     Loads data from an XVG-formatted file.
@@ -415,7 +417,7 @@ def load_xvgdata(path: str) -> XYData:
         data2[:, 0], data2[:, 1], DataLabel(xaxis, "", yaxis, ""), title + " " + legend
     )
 
-
+@llm_public()
 def convert_from_df(df: pd.DataFrame, label: DataLabel) -> list[XYData]:
     """
     Converts a pandas DataFrame into a list of XYData objects.
@@ -426,10 +428,10 @@ def convert_from_df(df: pd.DataFrame, label: DataLabel) -> list[XYData]:
         for i in range(1, len(df.columns))
     ]
 
-
+@llm_public()
 def load_jasco_data(p: str) -> list[XYData]:
     """
-    Loads JASCO-formatted data from a file and returns it as a list of XYData objects.
+    Loads JASCO-formatted txt data from a file and returns it as a list of XYData objects.
     Handles both 1D and 2D data formats.
     """
     label, data = _load_jasco_data(p)
@@ -451,7 +453,7 @@ def load_jasco_data(p: str) -> list[XYData]:
             )
         ]
 
-
+@llm_public()
 def load_dat(
     path: str,
     x_label: str = "",
@@ -485,7 +487,7 @@ def load_dat(
         array[0].to_numpy(), array[1].to_numpy(), DataLabel(x_label, x_unit, y_label, y_unit)
     )
 
-
+@llm_public()
 def slice_data(data: list[XYData], x_value: float, new_x_values: list[float]) -> XYData:
     """
     Slices a list of XYData objects at a specific X-value and interpolates Y-values
@@ -535,7 +537,7 @@ def plot_old(
         plt.savefig(save_path)  # type: ignore
     plt.show()  # type: ignore
 
-
+@llm_public()
 def plot_simple(
     ax: Axes,
     data: XYData,
@@ -561,7 +563,7 @@ def plot_simple(
     ax.set_ylabel(f"{data.dataLabel.Y_label} [{data.dataLabel.Y_unit}]")  # type: ignore
     ax.set_title(data.Title)  # type: ignore
 
-
+@llm_public()
 def plot1d(
     ax: Axes,
     data: XYData,
@@ -579,7 +581,7 @@ def plot1d(
     if range is not None:
         ax.set_xlim(range)
 
-
+@llm_public()
 def plot2d(
     ax: Axes,
     data: list[XYData],
@@ -608,7 +610,7 @@ def plot2d(
     if yrange is not None:
         ax.set_ylim(yrange)
 
-
+@llm_public()
 def for_white_background(ax: Axes) -> None:
     """
     Configures the given Matplotlib Axes object for a white background theme.
@@ -621,7 +623,7 @@ def for_white_background(ax: Axes) -> None:
     ax.tick_params(axis="y", colors="black", which="both")  # type: ignore
     ax.title.set_color("black")
 
-
+@llm_public()
 def for_black_background(ax: Axes) -> None:
     """
     Configures the given Matplotlib Axes object for a black background theme.
@@ -634,7 +636,7 @@ def for_black_background(ax: Axes) -> None:
     ax.tick_params(axis="y", colors="white", which="both")  # type: ignore
     ax.title.set_color("white")
 
-
+@llm_public()
 def remove_all_text(ax: Axes) -> None:
     """
     Removes all text elements (labels, title, legend) from a given Matplotlib Axes object.
