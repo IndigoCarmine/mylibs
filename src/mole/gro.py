@@ -136,7 +136,7 @@ class GroFile(IMolecule[GroAtom]):
         Returns:
             list[str]: A list of strings representing the GRO file content.
         """
-        gro = []
+        gro: list[str] = []
         gro.append(self.title)
         gro.append(f"   {len(self.atoms)}")
         for atom in self.atoms:
@@ -222,7 +222,7 @@ class GroFile(IMolecule[GroAtom]):
             return f"{f:12.6f}"
 
         NM_TO_ANGSTROM = 10
-        xyz = []
+        xyz: list[str] = []
         xyz.append(f"{len(self.atoms)}")
         xyz.append(self.title)
         for atom in self.atoms:
@@ -244,7 +244,7 @@ class GroFile(IMolecule[GroAtom]):
         with open(file_path, "w") as f:
             f.write("\n".join(self.generate_xyz_text()))
 
-    def load_xyz_text(self, data: list[str], multiple_molecules=False):
+    def load_xyz_text(self, data: list[str], multiple_molecules:bool=False):
         """
         Loads coordinate data from a list of strings representing an XYZ file.
         Args:
@@ -276,7 +276,7 @@ class GroFile(IMolecule[GroAtom]):
                     "not multiple of number of atoms in gro file"
                 )
             molnum = atomnum // len(self.atoms)
-            atoms = []
+            atoms: list[GroAtom] = []
             for n in range(molnum):
                 for i in range(len(self.atoms)):
                     line = data[n * len(self.atoms) + i + 2].split()
@@ -290,7 +290,7 @@ class GroFile(IMolecule[GroAtom]):
 
             self.atoms = atoms
 
-    def load_xyz_file(self, file_path: str, multiple_molecules=False):
+    def load_xyz_file(self, file_path: str, multiple_molecules: bool = False):
         """
         Loads coordinate data from an XYZ file.
         Args:
@@ -361,7 +361,7 @@ class GroFile(IMolecule[GroAtom]):
         """
         gro = cls("MOL", [], 0, 0, 0)
         if isinstance(atoms[0], GroAtom):
-            gro.atoms = atoms
+            gro.atoms = atoms # type: ignore
         else:
             gro.atoms = [
                 GroAtom(atom.index, atom.symbol, "MOL", 1, atom.coordinate)

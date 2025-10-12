@@ -14,17 +14,17 @@ import mole.molecules as mol
 import base_utils.cui_utils as cui
 
 
-class FastStructWapper[T: mol.IMolecule]():
+class FastStructWapper[A: mol.AtomBase]():
     """
     Move, rotate and replicate molecules in a fast way.
     and check if the molecules are too close to each other.
     """
 
-    def __init__(self, molecule: T):
+    def __init__(self, molecule: mol.IMolecule[A]):
         """
         Initializes the FastStructWapper with a single molecule.
         Args:
-            molecule (T): The molecule to wrap.
+            molecule (IMolecule[A]): The molecule to wrap.
         """
         self.molecule = molecule
         self.n_atoms = len(molecule.get_children())
@@ -68,7 +68,7 @@ class FastStructWapper[T: mol.IMolecule]():
         """
         self.coordinates = rotation.apply(self.coordinates)
 
-    def generate_as_molecule(self, Type: type) -> T:
+    def generate_as_molecule(self, Type: type) -> mol.IMolecule[A]:
         """
         Generates a molecule object from the current coordinates.
         Args:
