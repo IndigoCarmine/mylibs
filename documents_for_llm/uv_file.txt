@@ -1,0 +1,229 @@
+{
+  "context": {
+    "role": "ユーザー要望を自然言語からPythonコードに変換するアシスタント",
+    "library": "なし(Baseutilなど直接importしなさい)",
+    "usage_policy": "free"
+  },
+  "library": {
+    "name": "なし(Baseutilなど直接importしなさい)",
+    "description": "UV spectraをよみこみ描画するライブラリです。",
+    "classes": [
+      {
+        "type": "class",
+        "name": "Color",
+        "methods": [
+          {
+            "type": "function",
+            "name": "__init__",
+            "signature": "(self, colordict: dict[base_utils.plotlib.Style, str | None])",
+            "doc": null
+          },
+          {
+            "type": "classmethod",
+            "name": "single_color",
+            "signature": "(cls, color: str) -> 'Color'",
+            "doc": "Creates a Color instance where the same color is used across all styles.",
+            "class_name": "Color"
+          }
+        ],
+        "doc": "Manages colors for different plotting styles.\nAllows defining a set of colors that adapt to various output contexts (e.g., paper, presentation).",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "class",
+        "name": "XYData",
+        "methods": [
+          {
+            "type": "function",
+            "name": "clip",
+            "signature": "(self, xmin: float, xmax: float) -> 'XYData'",
+            "doc": "Returns a new XYData object with data clipped to a specified X range."
+          },
+          {
+            "type": "function",
+            "name": "get_y_at_nearest_x",
+            "signature": "(self, x: float) -> float",
+            "doc": "Returns the Y value corresponding to the X value nearest to the given 'x'."
+          },
+          {
+            "type": "function",
+            "name": "get_y_at_range",
+            "signature": "(self, xmin: float = -inf, xmax: float = inf) -> numpy.ndarray[tuple[typing.Any, ...], numpy.dtype[numpy.float64]]",
+            "doc": "Returns the Y values within a specified X range."
+          },
+          {
+            "type": "function",
+            "name": "normalize",
+            "signature": "(self) -> 'XYData'",
+            "doc": "Returns a new XYData object with Y values normalized to a range of 0 to 1."
+          },
+          {
+            "type": "function",
+            "name": "rename_labels",
+            "signature": "(self, label: base_utils.plotlib.DataLabel) -> 'XYData'",
+            "doc": "Returns a new XYData object with updated DataLabel."
+          },
+          {
+            "type": "function",
+            "name": "rename_title",
+            "signature": "(self, title: str) -> 'XYData'",
+            "doc": "Returns a new XYData object with an updated title."
+          },
+          {
+            "type": "function",
+            "name": "xscale",
+            "signature": "(self, scale: float) -> 'XYData'",
+            "doc": "Returns a new XYData object with X values scaled by a given factor."
+          },
+          {
+            "type": "function",
+            "name": "xshift",
+            "signature": "(self, shift: float) -> 'XYData'",
+            "doc": "Returns a new XYData object with X values shifted by a given amount."
+          },
+          {
+            "type": "function",
+            "name": "yscale",
+            "signature": "(self, scale: float) -> 'XYData'",
+            "doc": "Returns a new XYData object with Y values scaled by a given factor."
+          },
+          {
+            "type": "function",
+            "name": "yshift",
+            "signature": "(self, shift: float) -> 'XYData'",
+            "doc": "Returns a new XYData object with Y values shifted by a given amount."
+          }
+        ],
+        "doc": "Represents a set of X-Y data points with associated labels and an optional title.\nProvides methods for data manipulation such as renaming, shifting, scaling, and normalization.",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "class",
+        "name": "PlotOption",
+        "methods": [],
+        "doc": "Defines options for plotting individual data series, such as color, marker, and line style.",
+        "module": "base_utils.plotlib"
+      }
+    ],
+    "functions": [
+      {
+        "type": "function",
+        "name": "load_xvgdata",
+        "signature": "(path: str) -> base_utils.plotlib.XYData",
+        "doc": "Loads data from an XVG-formatted file.\nParses title, axis labels, and legend from the file and returns an XYData object.",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "function",
+        "name": "convert_from_df",
+        "signature": "(df: pandas.core.frame.DataFrame, label: base_utils.plotlib.DataLabel) -> list[base_utils.plotlib.XYData]",
+        "doc": "Converts a pandas DataFrame into a list of XYData objects.\nAssumes the first column of the DataFrame is the X-axis data, and subsequent columns are Y-axis data.",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "function",
+        "name": "load_jasco_data",
+        "signature": "(p: str) -> list[base_utils.plotlib.XYData]",
+        "doc": "Loads JASCO-formatted txt data from a file and returns it as a list of XYData objects.\nHandles both 1D and 2D data formats.",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "function",
+        "name": "load_dat",
+        "signature": "(path: str, x_label: str = '', y_label: str = '', x_unit: str = '', y_unit: str = '', has_header: bool = False) -> base_utils.plotlib.XYData",
+        "doc": "Loads data from a .dat file (tab-separated) and returns it as an XYData object.\nAllows specifying axis labels, units, and whether the file has a header.",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "function",
+        "name": "load_csv",
+        "signature": "(path: str) -> list[base_utils.plotlib.XYData]",
+        "doc": "Loads data from a CSV file and returns it as a list of XYData objects.\nAssumes the first column is the X-axis data and subsequent columns are Y-axis data.",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "function",
+        "name": "slice_data",
+        "signature": "(data: list[base_utils.plotlib.XYData], x_value: float, new_x_values: list[float]) -> base_utils.plotlib.XYData",
+        "doc": "Slices a list of XYData objects at a specific X-value and interpolates Y-values\nonto a new set of X-values.",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "function",
+        "name": "plot_simple",
+        "signature": "(ax: matplotlib.axes._axes.Axes, data: base_utils.plotlib.XYData, plot_option: base_utils.plotlib.PlotOption = PlotOption(color=Color(colordict={<Style.paper: 0>: 'black', <Style.presentation_black: 1>: 'white', <Style.presentation_white: 2>: 'black', <Style.poster_black_highcontrast: 3>: 'white'}), marker=None, markersize=1, linestyle='-', linewidth=1.5), figure_option: base_utils.plotlib.FigureOption = FigureOption(size=(4, 3), plot_option=PlotOption(color=Color(colordict={<Style.paper: 0>: 'black', <Style.presentation_black: 1>: 'white', <Style.presentation_white: 2>: 'black', <Style.poster_black_highcontrast: 3>: 'white'}), marker=None, markersize=1, linestyle='-', linewidth=1.5), is_white_background=True, plot_option_override=False), style: base_utils.plotlib.Style = <Style.paper: 0>) -> None",
+        "doc": "Plots a single XYData series on a given Matplotlib Axes object.\nApplies specified plot options and style.",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "function",
+        "name": "plot1d",
+        "signature": "(ax: matplotlib.axes._axes.Axes, data: base_utils.plotlib.XYData, style: base_utils.plotlib.Style, plot_option: base_utils.plotlib.PlotOption = PlotOption(color=Color(colordict={<Style.paper: 0>: 'black', <Style.presentation_black: 1>: 'white', <Style.presentation_white: 2>: 'black', <Style.poster_black_highcontrast: 3>: 'white'}), marker=None, markersize=1, linestyle='-', linewidth=1.5), figure_option: base_utils.plotlib.FigureOption = FigureOption(size=(4, 3), plot_option=PlotOption(color=Color(colordict={<Style.paper: 0>: 'black', <Style.presentation_black: 1>: 'white', <Style.presentation_white: 2>: 'black', <Style.poster_black_highcontrast: 3>: 'white'}), marker=None, markersize=1, linestyle='-', linewidth=1.5), is_white_background=True, plot_option_override=False), range: Optional[tuple[float, float]] = None) -> None",
+        "doc": "Plots a single 1D XYData series on a given Matplotlib Axes object.\nAllows setting X-axis range.",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "function",
+        "name": "plot2d",
+        "signature": "(ax: matplotlib.axes._axes.Axes, data: list[base_utils.plotlib.XYData], style: base_utils.plotlib.Style, plot_option: base_utils.plotlib.PlotOption = PlotOption(color=Color(colordict={<Style.paper: 0>: 'black', <Style.presentation_black: 1>: 'white', <Style.presentation_white: 2>: 'black', <Style.poster_black_highcontrast: 3>: 'white'}), marker=None, markersize=1, linestyle='-', linewidth=1.5), figure_option: base_utils.plotlib.FigureOption = FigureOption(size=(4, 3), plot_option=PlotOption(color=Color(colordict={<Style.paper: 0>: 'black', <Style.presentation_black: 1>: 'white', <Style.presentation_white: 2>: 'black', <Style.poster_black_highcontrast: 3>: 'white'}), marker=None, markersize=1, linestyle='-', linewidth=1.5), is_white_background=True, plot_option_override=False), xrange: Optional[tuple[float, float]] = None, yrange: Optional[tuple[float, float]] = None) -> None",
+        "doc": "Plots multiple XYData series on a given Matplotlib Axes object, suitable for 2D plots.\nAllows setting X and Y axis ranges.",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "function",
+        "name": "for_white_background",
+        "signature": "(ax: matplotlib.axes._axes.Axes) -> None",
+        "doc": "Configures the given Matplotlib Axes object for a white background theme.\nSets spine, label, and tick colors to black.",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "function",
+        "name": "for_black_background",
+        "signature": "(ax: matplotlib.axes._axes.Axes) -> None",
+        "doc": "Configures the given Matplotlib Axes object for a black background theme.\nSets spine, label, and tick colors to white.",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "function",
+        "name": "remove_all_text",
+        "signature": "(ax: matplotlib.axes._axes.Axes) -> None",
+        "doc": "Removes all text elements (labels, title, legend) from a given Matplotlib Axes object.",
+        "module": "base_utils.plotlib"
+      }
+    ],
+    "enums": [
+      {
+        "type": "enum",
+        "name": "Style",
+        "values": [
+          "paper",
+          "presentation_black",
+          "presentation_white",
+          "poster_black_highcontrast"
+        ],
+        "doc": "Defines different plotting styles for various output formats (e.g., paper, presentation).",
+        "module": "base_utils.plotlib"
+      },
+      {
+        "type": "enum",
+        "name": "DataLabels",
+        "values": [
+          "UV",
+          "FL",
+          "CD",
+          "IR",
+          "XRD"
+        ],
+        "doc": "Predefined DataLabel instances for common spectroscopic data types.",
+        "module": "base_utils.plotlib"
+      }
+    ],
+    "constants": []
+  },
+  "rules": [
+    "ユーザーは自然言語で要望を述べる",
+    "あなたは要望を分析し、関数やクラスメソッドを組み合わせてPythonコードを生成する",
+    "不明確な要望は質問で確認してからコードを生成する"
+  ],
+  "examples": []
+}

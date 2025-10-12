@@ -62,6 +62,11 @@ Provides methods for data manipulation such as renaming, shifting, scaling, and 
 **Description:** 
 
 
+### Function: load_csv
+**Signature:** `(path: str) -> list[base_utils.plotlib.XYData]`
+**Description:** 
+
+
 ### Function: slice_data
 **Signature:** `(data: list[base_utils.plotlib.XYData], x_value: float, new_x_values: list[float]) -> base_utils.plotlib.XYData`
 **Description:** 
