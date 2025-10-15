@@ -2,8 +2,7 @@ This is python libs just for me (and sometimes for us.)
 
 If you want to use, run a following.
 ```bash
-python -m pip install -r requirements.txt
-python -m pip install -e .
+uv add https://github.com/IndigoCarmine/mylibs
 ```
 
 

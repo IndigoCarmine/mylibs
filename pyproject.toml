@@ -1,6 +1,6 @@
 [project]
 name = "yagaiG-libs"
-version = "0.2.1"
+version = "0.2.2"
 authors = [{ name = "Yuhei Yada", email = "tamanisikamiani@gmail.com" }]
 description = "This library contains a mixture of code that can be used with YagaiG's measuring equipment and code for MD. In fact, it should have a more decent structure, but it was too much trouble, so we packaged it as it is."
 readme = "README.md"
@@ -11,14 +11,33 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-dependencies = ["pydantic", "numpy", "pandas", "matplotlib", "scipy", "annotated-types", "pydantic-settings", "pydantic-core", "python-dotenv", "typing_extensions", "pyparsing"]
+dependencies = [
+    "pydantic",
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "scipy",
+    "annotated-types",
+    "pydantic-settings",
+    "pydantic-core",
+    "python-dotenv",
+    "typing_extensions",
+    "pyparsing",
+    "ref-for-llm",
+]
 
 
 [project.optional-dependencies]
 dev = ["build", "twine", "mypy"]
-[project.urls]
-"Homepage" = "https://chem.tf.chiba-u.jp/yagai/index.html"
 
 
 [tool.setuptools.package-data]
 "gromacs" = ["DefaultFiles/*"]
+
+[tool.uv.sources]
+ref-for-llm = { git = "https://github.com/IndigoCarmine/ref_for_llm.git" }
+
+[dependency-groups]
+dev = [
+    "vermin>=1.7.0",
+]

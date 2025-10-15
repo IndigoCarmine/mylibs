@@ -18,6 +18,9 @@ import pandas as pd
 from matplotlib.axes import Axes
 from typing_extensions import deprecated
 
+
+from ref_for_llm.deco import llm_public
+
 from base_utils import typecheck
 
 # matplotlib setting (スライドに直接貼っても問題ないようにするため)
@@ -38,6 +41,7 @@ poster_color_yellow = "#FFFF00"
 slide_color_orange = "#ff7b00"
 
 
+@llm_public()
 class Style(Enum):
     """
     Defines different plotting styles for various output formats (e.g., paper, presentation).
@@ -49,6 +53,7 @@ class Style(Enum):
     poster_black_highcontrast = 3
 
 
+@llm_public()
 @dataclass
 class Color:
     """
@@ -58,6 +63,7 @@ class Color:
 
     colordict: dict[Style, str | None]
 
+    @llm_public()
     def __init__(self, colordict: dict[Style, str | None]):
         self.colordict = colordict
 
@@ -67,6 +73,7 @@ class Color:
         """
         return self.colordict[style]
 
+    @llm_public()
     @classmethod
     def single_color(cls, color: str) -> "Color":
         """
@@ -134,6 +141,7 @@ colors: dict[str, Color] = {
 }
 
 
+@llm_public()
 @dataclass
 class DataLabel:
     """
@@ -146,6 +154,7 @@ class DataLabel:
     Y_unit: Optional[str]
 
 
+@llm_public()
 class DataLabels(Enum):
     """
     Predefined DataLabel instances for common spectroscopic data types.
@@ -158,6 +167,7 @@ class DataLabels(Enum):
     XRD = DataLabel("2theta", "degree", "intensity", "-")
 
 
+@llm_public()
 @dataclass(frozen=True)
 class XYData:
     """
@@ -182,18 +192,21 @@ class XYData:
         if len(self.X) == 0:
             raise ValueError("X and Y must not be empty")
 
+    @llm_public()
     def rename_labels(self, label: DataLabel) -> "XYData":
         """
         Returns a new XYData object with updated DataLabel.
         """
         return XYData(self.X, self.Y, label, self.Title)
 
+    @llm_public()
     def rename_title(self, title: str) -> "XYData":
         """
         Returns a new XYData object with an updated title.
         """
         return XYData(self.X, self.Y, self.dataLabel, title)
 
+    @llm_public()
     def get_y_at_range(self, xmin: float = -np.inf, xmax: float = np.inf) -> np.ndarray:
         """
         Returns the Y values within a specified X range.
@@ -201,6 +214,7 @@ class XYData:
         mask = (self.X >= xmin) & (self.X <= xmax)
         return self.Y[mask]
 
+    @llm_public()
     def get_y_at_nearest_x(self, x: float) -> float:
         """
         Returns the Y value corresponding to the X value nearest to the given 'x'.
@@ -208,30 +222,35 @@ class XYData:
         idx = np.argmin(np.abs(self.X - x))
         return self.Y[idx]
 
+    @llm_public()
     def xshift(self, shift: float) -> "XYData":
         """
         Returns a new XYData object with X values shifted by a given amount.
         """
         return XYData(self.X + shift, self.Y, self.dataLabel, self.Title)
 
+    @llm_public()
     def yshift(self, shift: float) -> "XYData":
         """
         Returns a new XYData object with Y values shifted by a given amount.
         """
         return XYData(self.X, self.Y + shift, self.dataLabel, self.Title)
 
+    @llm_public()
     def xscale(self, scale: float) -> "XYData":
         """
         Returns a new XYData object with X values scaled by a given factor.
         """
         return XYData(self.X * scale, self.Y, self.dataLabel, self.Title)
 
+    @llm_public()
     def yscale(self, scale: float) -> "XYData":
         """
         Returns a new XYData object with Y values scaled by a given factor.
         """
         return XYData(self.X, self.Y * scale, self.dataLabel, self.Title)
 
+    @llm_public()
     def clip(self, xmin: float, xmax: float) -> "XYData":
         """
         Returns a new XYData object with data clipped to a specified X range.
@@ -239,6 +258,7 @@ class XYData:
         mask = (self.X >= xmin) & (self.X <= xmax)
         return XYData(self.X[mask], self.Y[mask], self.dataLabel, self.Title)
 
+    @llm_public()
     def normalize(self) -> "XYData":
         """
         Returns a new XYData object with Y values normalized to a range of 0 to 1.
@@ -249,6 +269,7 @@ class XYData:
         return XYData(self.X, Y, self.dataLabel, self.Title)
 
 
+@llm_public()
 @dataclass
 class PlotOption:
     """
@@ -262,6 +283,7 @@ class PlotOption:
     linewidth: float
 
 
+@llm_public()
 class PlotOptions:
     """
     Predefined PlotOption instances for common plotting scenarios.
@@ -271,6 +293,7 @@ class PlotOptions:
     presentation = PlotOption(colors["monotone"], "o", 2, "-", 3)
 
 
+@llm_public()
 @dataclass
 class FigureOption:
     """
@@ -286,6 +309,7 @@ class FigureOption:
 default_figure_size = (4, 3)
 
 
+@llm_public()
 class FigureOptions:
     """
     Predefined FigureOption instances for common figure setups.
@@ -377,6 +401,7 @@ def load_2ddata(path: str) -> list[XYData]:
     ][0:-1]
 
 
+@llm_public()
 @typecheck.type_check
 def load_xvgdata(path: str) -> XYData:
     """
@@ -412,6 +437,7 @@ def load_xvgdata(path: str) -> XYData:
     )
 
 
+@llm_public()
 @typecheck.type_check
 def convert_from_df(df: pd.DataFrame, label: DataLabel) -> list[XYData]:
     """
@@ -424,6 +450,7 @@ def convert_from_df(df: pd.DataFrame, label: DataLabel) -> list[XYData]:
     ]
 
 
+@llm_public()
 @typecheck.type_check
 def load_jasco_data(p: str) -> list[XYData]:
     """
@@ -450,6 +477,7 @@ def load_jasco_data(p: str) -> list[XYData]:
         ]
 
 
+@llm_public()
 @typecheck.type_check
 def load_dat(
     path: str,
@@ -485,6 +513,7 @@ def load_dat(
     )
 
 
+@llm_public()
 @typecheck.type_check
 def load_csv(path: str) -> list[XYData]:
     """
@@ -514,6 +543,7 @@ def load_csv(path: str) -> list[XYData]:
     return convert_from_df(df, label)
 
 
+@llm_public()
 @typecheck.type_check
 def slice_data(data: list[XYData], x_value: float, new_x_values: list[float]) -> XYData:
     """
@@ -592,6 +622,7 @@ def plot_simple(
     ax.set_title(data.Title)
 
 
+@llm_public()
 @typecheck.type_check
 def plot1d(
     ax: Axes,
@@ -611,6 +642,7 @@ def plot1d(
         ax.set_xlim(range)
 
 
+@llm_public()
 @typecheck.type_check
 def plot2d(
     ax: Axes,
@@ -641,6 +673,7 @@ def plot2d(
         ax.set_ylim(yrange)
 
 
+@llm_public()
 @typecheck.type_check
 def for_white_background(ax: Axes) -> None:
     """
@@ -655,6 +688,7 @@ def for_white_background(ax: Axes) -> None:
     ax.title.set_color("black")
 
 
+@llm_public()
 @typecheck.type_check
 def for_black_background(ax: Axes) -> None:
     """
@@ -669,6 +703,7 @@ def for_black_background(ax: Axes) -> None:
     ax.title.set_color("white")
 
 
+@llm_public()
 @typecheck.type_check
 def remove_all_text(ax: Axes) -> None:
     """

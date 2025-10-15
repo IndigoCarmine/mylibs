@@ -3,6 +3,7 @@ This module provides functions for fitting experimental data to cooperative bind
 including the isodesmic and cooperative polymerization models.
 It also includes utilities for data loading, manipulation, and visualization of fitting results.
 """
+
 from matplotlib import pyplot as plt
 import numpy as np
 import numpy.typing as npt
@@ -23,29 +24,40 @@ def isodesmic(X: np.number | npt.NDArray[np.number], K: np.number | float | int)
     return (2 * B + 1 - (4 * B + 1) ** 0.5) / (2 * B)
 
 
-def cubic(b, c, d):
-    """
-    Solves a cubic equation of the form x^3 + bx^2 + cx + d = 0 using Cardano's formula.
-    Args:
-        b: Coefficient of x^2.
-        c: Coefficient of x.
-        d: Constant term.
-    Returns:
-        float: The real root of the cubic equation.
-    """
+def real_cbrt(x: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+    return np.sign(x) * np.abs(x) ** (1 / 3)
+
+
+def cubic(
+    b: npt.NDArray[np.float64], c: npt.NDArray[np.float64], d: npt.NDArray[np.float64]
+) -> npt.NDArray[np.float64]:
     p = (3 * c - b**2) / 3
     q = (2 * b**3 - 9 * b * c + 27 * d) / 27
-    dit = 27 * q**2 + 4 * p**3
-    r33 = 3 * (3**0.5) + 0j
-    r63 = 6 * (3**0.5) + 0j
-    w = (1 + 3**0.5 * 1j) / 2
-    x = (
-        -b / 3
-        - ((r33 * q + (dit + 0j) ** 0.5) / r63) ** (1 / 3)
-        - ((q * r33 - (dit + 0j) ** 0.5) / r63) ** (1 / 3)
-    )
+    delta = (q / 2) ** 2 + (p / 3) ** 3
 
-    return x.real
+    # 出力配列を準備
+    x = np.empty_like(b, dtype=np.float64)
+
+    mask1 = delta >= 0
+    if np.any(mask1):
+        u = real_cbrt(-q[mask1] / 2 + np.sqrt(delta[mask1]))
+        v = real_cbrt(-q[mask1] / 2 - np.sqrt(delta[mask1]))
+        y = u + v
+        x[mask1] = (y - b[mask1] / 3).real
+
+    mask2 = ~mask1
+    if np.any(mask2):
+        r = 2 * np.sqrt(-p[mask2] / 3)
+        arg = (-q[mask2] / 2) / np.sqrt(-((p[mask2] / 3) ** 3))
+        arg = np.clip(arg, -1.0, 1.0)  # 丸め誤差対策
+        theta = np.arccos(arg)
+        y1 = r * np.cos(theta / 3)
+        y2 = r * np.cos(theta / 3 - 2 * np.pi / 3)
+        y3 = r * np.cos(theta / 3 - 4 * np.pi / 3)
+        y = np.minimum(np.minimum(y1, y2), y3)
+        x[mask2] = (y - b[mask2] / 3).real
+
+    return x
 
 
 def cooperative(
@@ -322,7 +334,6 @@ def fit(path: str = "UV", clip: int = 65):
         fig.savefig(file_name, bbox_inches="tight", transparent=True)
 
 
-
 def fit2(path: str = "UV"):
     """
     Performs fitting of experimental data to the cooperative binding model with a background term.
@@ -432,7 +443,6 @@ def fit2(path: str = "UV"):
         ax.minorticks_on()
         file_name = os.path.join(path, str(clip), d.Title + ".svg")
         fig.savefig(file_name, bbox_inches="tight", transparent=True)
-
 
 
 def test_plot():
