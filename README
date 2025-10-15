@@ -29,5 +29,7 @@ Gromacsの計算ファイル群を作成するためのものです。
 plotlibのサンプルコードがsamples/Cooling_plotにあります。
 
 
-、
 
+
+# コード変更時の注意点
+- python.analysis.typeCheckingMode: strictは必ず設定すること

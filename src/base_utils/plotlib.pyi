@@ -37,7 +37,13 @@ class DataLabel:
     X_unit: Optional[str]
     Y_label: Optional[str]
     Y_unit: Optional[str]
-    def __init__(self, X_label, X_unit, Y_label, Y_unit) -> None: ...
+    def __init__(
+        self,
+        X_label: Optional[str],
+        X_unit: Optional[str],
+        Y_label: Optional[str],
+        Y_unit: Optional[str],
+    ) -> None: ...
 
 class DataLabels:
     UV = ...
@@ -56,7 +62,7 @@ class XYData:
     def rename_title(self, title: str) -> "XYData": ...
     def get_y_at_range(
         self, xmin: float = -np.inf, xmax: float = np.inf
-    ) -> np.ndarray: ...
+    ) -> npt.NDArray[np.number]: ...
     def get_y_at_nearest_x(self, x: float) -> float: ...
     def xshift(self, shift: float) -> "XYData": ...
     def yshift(self, shift: float) -> "XYData": ...
@@ -64,7 +70,13 @@ class XYData:
     def yscale(self, scale: float) -> "XYData": ...
     def clip(self, xmin: float, xmax: float) -> "XYData": ...
     def normalize(self) -> "XYData": ...
-    def __init__(self, X, Y, dataLabel, Title=...) -> None: ...
+    def __init__(
+        self,
+        X: npt.NDArray[np.number],
+        Y: npt.NDArray[np.number],
+        dataLabel: DataLabel,
+        Title: str = ...,
+    ) -> None: ...
 
 @dataclass
 class PlotOption:
@@ -73,7 +85,14 @@ class PlotOption:
     markersize: float
     linestyle: str
     linewidth: float
-    def __init__(self, color, marker, markersize, linestyle, linewidth) -> None: ...
+    def __init__(
+        self,
+        color: Color,
+        marker: str | None,
+        markersize: float,
+        linestyle: str,
+        linewidth: float,
+    ) -> None: ...
 
 class PlotOptions:
     paper = ...
@@ -89,7 +108,11 @@ class FigureOption:
     plot_option_override: bool = ...
 
     def __init__(
-        self, size, plot_option, is_white_background=..., plot_option_override=...
+        self,
+        size: tuple[float, float],
+        plot_option: PlotOption,
+        is_white_background: bool = ...,
+        plot_option_override: bool = ...,
     ) -> None: ...
 
 class FigureOptions:
@@ -113,7 +136,7 @@ def load_dat(
 def load_csv(path: str) -> list[XYData]: ...
 def plot_old(
     data: XYData, figure_option: FigureOption = ..., save_path: Optional[str] = None
-): ...
+) -> None: ...
 def plot_simple(
     ax: Axes,
     data: XYData,

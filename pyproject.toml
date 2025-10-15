@@ -23,13 +23,13 @@ dependencies = [
     "python-dotenv",
     "typing_extensions",
     "pyparsing",
+    "lmfit>=1.3.4",
     "ref-for-llm",
 ]
 
 
 [project.optional-dependencies]
 dev = ["build", "twine", "mypy"]
-
 
 [tool.setuptools.package-data]
 "gromacs" = ["DefaultFiles/*"]
@@ -38,6 +38,4 @@ dev = ["build", "twine", "mypy"]
 ref-for-llm = { git = "https://github.com/IndigoCarmine/ref_for_llm.git" }
 
 [dependency-groups]
-dev = [
-    "vermin>=1.7.0",
-]
+dev = ["vermin>=1.7.0"]
