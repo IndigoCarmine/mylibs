@@ -174,8 +174,8 @@ class XYData:
     Provides methods for data manipulation such as renaming, shifting, scaling, and normalization.
     """
 
-    X: npt.NDArray[FLOAT]
-    Y: npt.NDArray[FLOAT]
+    X: npt.NDArray[np.floating]
+    Y: npt.NDArray[np.floating]
     dataLabel: DataLabel
     Title: str = ""
 
@@ -451,7 +451,6 @@ def convert_from_df(df: pd.DataFrame, label: DataLabel) -> list[XYData]:
 
 
 @llm_public()
-@typecheck.type_check
 def load_jasco_data(p: str) -> list[XYData]:
     """
     Loads JASCO-formatted txt data from a file and returns it as a list of XYData objects.
@@ -483,7 +482,6 @@ def load_jasco_data(p: str) -> list[XYData]:
 
 
 @llm_public()
-@typecheck.type_check
 def load_dat(
     path: str,
     x_label: str = "",

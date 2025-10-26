@@ -1,6 +1,6 @@
 [project]
 name = "yagaiG-libs"
-version = "0.2.3"
+version = "0.2.4"
 authors = [{ name = "Yuhei Yada", email = "tamanisikamiani@gmail.com" }]
 description = "This library contains a mixture of code that can be used with YagaiG's measuring equipment and code for MD. In fact, it should have a more decent structure, but it was too much trouble, so we packaged it as it is."
 readme = "README.md"
