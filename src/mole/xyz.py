@@ -195,7 +195,7 @@ class XyzMolecule(IMolecule[XyzAtom]):
         lines = []
         with open(path, "r") as f:
             lines = f.readlines()
-        name = lines[0].strip()
+        name = lines[1].strip()
         lines = lines[2:]  # first two lines are comments
         lines = [line.strip() for line in lines]
         lines = [line for line in lines if line != ""]

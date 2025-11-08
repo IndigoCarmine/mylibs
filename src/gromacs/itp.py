@@ -9,7 +9,7 @@ def generate_inermolecular_interactions(
     bonds: list[tuple[int, int]],
     nmols_in_rosette: int = 6,
     bondleng: float = 0.3,  # nm
-    k: float = 5000,  # kJ/(mol*nm^2)
+    k: int = 5000,  # kJ/(mol*nm^2)
     outfile_path: str = "intermolecular_bond.itp",
 ):
     grobalbond = []
@@ -30,4 +30,4 @@ def generate_inermolecular_interactions(
         f.write("[ bonds ]\n")
         f.write(";  ai    aj funct   length    k\n")
         for b in grobalbond:
-            f.write(f"{b[0]:6d} {b[1]:6d}   6    {bondleng:6.3f}  {k:6.0f}\n")
+            f.write(f"{b[0]:6d} {b[1]:6d}   6    {bondleng:6.3f}   {k:6.0f}\n")
