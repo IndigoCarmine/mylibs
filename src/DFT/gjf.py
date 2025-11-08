@@ -63,10 +63,8 @@ class CalculationType:
     def from_string(cls, string: str):
         """
         Parses calculation type from a string and returns a CalculationType object.
-        Currently not implemented.
         """
-        raise NotImplementedError("from_string method is not implemented")
-        lines = string.splitlines()
+        lines = string.strip().splitlines()
         basis_set = ""
         functional = ""
         workflow = ""
@@ -74,8 +72,12 @@ class CalculationType:
             if line.startswith("#P"):
                 parts = line.split()
                 workflow = parts[1]
-                functional = parts[2]
-                basis_set = parts[3]
+                functional_basis_set = parts[2].split('\\')
+                functional = functional_basis_set[0]
+                if len(functional_basis_set) > 1:
+                    basis_set = functional_basis_set[1]
+                else:
+                    basis_set = ""
 
         if not basis_set or not functional or not workflow:
             raise ValueError("Invalid calculation type string")
@@ -89,9 +91,9 @@ class GJFFile:
     Represents a Gaussian Job File (GJF) with properties for allocation, calculation type,
     molecular structure, title, charge, multiplicity, and fragment.
     """
-    allocation: AllocationProperty = AllocationProperty()
-    calculation_type: CalculationType = CalculationType()
-    molecule: mole.xyz.XyzMolecule = mole.xyz.XyzMolecule()
+    allocation: AllocationProperty = dataclasses.field(default_factory=AllocationProperty)
+    calculation_type: CalculationType = dataclasses.field(default_factory=CalculationType)
+    molecule: mole.xyz.XyzMolecule = dataclasses.field(default_factory=lambda: mole.xyz.XyzMolecule(name="unnamed", index=0, children=[]))
     title: str = "GJF file"
     charge: int = 0
     multiplicity: int = 1
