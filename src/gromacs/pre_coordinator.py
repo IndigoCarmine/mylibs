@@ -3,14 +3,17 @@ This module provides functions for pre-coordinating molecular structures.
 These functions are used to align and orient molecules in a specific way,
 which can be useful for setting up GROMACS simulations or other molecular analyses.
 """
+
 from scipy.spatial.transform import Rotation
 import mole.molecules as molecules
+import mole.xyz as xyz
 import numpy as np
+import rdkit.Chem as Chem
 
 
-def pre_coordinate[
-    T: molecules.IMolecule
-](molecule: T, topO: int, aromaticsideO: int, aromaticothersideO: int) -> T:
+def pre_coordinate[T: molecules.IMolecule](
+    molecule: T, topO: int, aromaticsideO: int, aromaticothersideO: int
+) -> T:
     """
     Pre-coordinates a molecule by translating its 'top' atom to the origin,
     then rotating it so that a vector defined by two aromatic side atoms aligns with the x-axis,
@@ -41,16 +44,15 @@ def pre_coordinate[
     # first O to next O vector
     vector = molecule.get_child(aromaticsideO).coordinate.astype(float)
     # rot to move vector to xz plane and rotate only x axis
-    rot = Rotation.from_euler("x", np.arctan2(
-        vector[1], vector[2]), degrees=False)
+    rot = Rotation.from_euler("x", np.arctan2(vector[1], vector[2]), degrees=False)
     molecule.rotate(rot)
 
     return molecule
 
 
-def precooredinate2[
-    T: molecules.IMolecule
-](molecule: T, topO: int, aromaticsideNH: int, aromaticothersideO: int) -> T:
+def precooredinate2[T: molecules.IMolecule](
+    molecule: T, topO: int, aromaticsideNH: int, aromaticothersideO: int
+) -> T:
     """
     Pre-coordinates a molecule by translating its 'top' atom to the origin,
     then rotating it to align an aromatic side NH atom with the x-axis,
@@ -72,16 +74,14 @@ def precooredinate2[
     vector = molecule.get_child(aromaticsideNH).coordinate.astype(float)
 
     # move vector to x axis
-    rot = Rotation.from_euler(
-        "z", -np.arctan2(vector[1], vector[0]), degrees=False)
+    rot = Rotation.from_euler("z", -np.arctan2(vector[1], vector[0]), degrees=False)
 
     molecule.rotate(rot)
 
     # move aromatic side NH to x axis
     vector = molecule.get_child(aromaticsideNH).coordinate.astype(float)
 
-    rot = Rotation.from_euler("y", np.arctan2(
-        vector[2], vector[0]), degrees=False)
+    rot = Rotation.from_euler("y", np.arctan2(vector[2], vector[0]), degrees=False)
     molecule.rotate(rot)
 
     # move aromatic side O to xz plane
@@ -89,10 +89,31 @@ def precooredinate2[
 
     print(-np.arctan2(vector[2], -vector[1]) * 180 / np.pi)
     # move vector to xz plane
-    rot = Rotation.from_euler("x", np.arctan2(
-        vector[2], -vector[1]), degrees=False)
+    rot = Rotation.from_euler("x", np.arctan2(vector[2], -vector[1]), degrees=False)
     # rot = Rotation.from_euler("x", np.pi, degrees=False) * rot
 
     molecule.rotate(rot)
 
     return molecule
+
+
+def get_substructure_match(
+    molecule: molecules.IMolecule, substructure: molecules.IMolecule
+) -> list[int]:
+    """
+    Finds the indices of atoms in the molecule that match the given substructure.
+    Args:
+        molecule (molecules.IMolecule): The molecule to search within.
+        substructure (molecules.IMolecule): The substructure to match.
+    Returns:
+        list[int]: A list of atom indices in the molecule that match the substructure.
+    """
+
+    mol = Chem.MolFromXYZBlock(
+        xyz.XyzMolecule.make_from(molecule, "A", 0).save_xyz_text()
+    )
+    submol = Chem.MolFromXYZBlock(
+        xyz.XyzMolecule.make_from(substructure, "A", 0).save_xyz_text()
+    )
+    match = mol.GetSubstructMatch(submol)
+    return list(match)
