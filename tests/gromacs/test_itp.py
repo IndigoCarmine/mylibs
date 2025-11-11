@@ -3,10 +3,7 @@ import sys
 import os
 import tempfile
 
-# Add the src directory to the Python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
-
-from gromacs.itp import generate_inermolecular_interactions
+from src.gromacs.itp import generate_inermolecular_interactions
 
 class TestItp(unittest.TestCase):
 
