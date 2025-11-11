@@ -9,10 +9,12 @@ import warnings
 from pydantic.dataclasses import dataclass, Field
 import dataclasses
 import enum
+import inspect
 import os
 import shutil
 from typing import override
 
+import json
 import gromacs.mdp as mdp
 import numpy as np
 
@@ -37,14 +39,11 @@ def defaut_file_content(name: str) -> str:
         return f.read()
 
 
-class Calclation(ABC):
+class Calculation(ABC):
     """
     Abstract base class for all GROMACS calculation types.
     Defines the interface for generating calculation files and retrieving the calculation name.
     """
-
-    def __init__(self):
-        raise Exception("Abstract class cannot be instantiated")
 
     @abstractmethod
     def generate(self) -> dict[str, str]:
@@ -53,8 +52,7 @@ class Calclation(ABC):
         Returns:
             dict[str, str]: A dictionary where keys are file names and values are file contents.
         """
-        Exception("This method must be implemented. " + "Abstract method was called")
-        return {}
+        raise NotImplementedError("This method must be implemented. " + "Abstract method was called")
 
     @property
     @abstractmethod
@@ -66,7 +64,7 @@ class Calclation(ABC):
 
 
 @dataclass(kw_only=True)
-class EM(Calclation):
+class EM(Calculation):
     """
     Class representing an energy minimization (EM) calculation.
     Attributes:
@@ -143,7 +141,7 @@ class MDType(enum.Enum):
 
 
 @dataclass(kw_only=True)
-class MD(Calclation):
+class MD(Calculation):
     """
     A class to represent a Molecular Dynamics (MD) calculation.
     Attributes:
@@ -316,7 +314,7 @@ class MD(Calclation):
                 }
 
 
-class RuntimeSolvation(Calclation):
+class RuntimeSolvation(Calculation):
     """
     A class to represent a runtime solvation calculation.
     (runtime solvation is original keyword in the library
@@ -346,7 +344,7 @@ class RuntimeSolvation(Calclation):
         self,
         *,
         solvent: str = "MCH",
-        name: str = "solvation",
+        calculation_name: str = "solvation",
         rate: float = 1.0,
         ntry: int = 300,
     ):
@@ -368,7 +366,7 @@ class RuntimeSolvation(Calclation):
             case _:
                 raise ValueError("Invalid solvent")
 
-        self.calculation_name = name
+        self.calculation_name = calculation_name
         self.rate = rate
         self.ntry = ntry
 
@@ -428,7 +426,7 @@ class RuntimeSolvation(Calclation):
         return self
 
 
-class Solvation(Calclation):
+class Solvation(Calculation):
     """
     A class to represent a solvation calculation, allowing control over the number of solvent molecules.
     """
@@ -436,7 +434,7 @@ class Solvation(Calclation):
     def __init__(
         self,
         solvent: str = "MCH",
-        name: str = "solvation",
+        calculation_name: str = "solvation",
         nmol: int = 100,
         ntry: int = 300,
     ):
@@ -458,7 +456,7 @@ class Solvation(Calclation):
             case _:
                 raise ValueError("Invalid solvent")
 
-        self.calculation_name = name
+        self.calculation_name = calculation_name
         self.nmol = nmol
         self.ntry = ntry
 
@@ -526,20 +524,20 @@ class Solvation(Calclation):
         }
 
 
-class SolvationSCP216(Calclation):
+class SolvationSCP216(Calculation):
     """
     A class to represent a solvation calculation using the SPC216 water model.
     Attributes:
         name (str): The name of the calculation.
     """
 
-    def __init__(self, name: str = "solvation"):
+    def __init__(self, calculation_name: str = "solvation"):
         """
         Initializes the SolvationSCP216 object.
         Args:
-            name (str): The name of the calculation.
+            calculation_name (str): The name of the calculation.
         """
-        self.calculation_name = name
+        self.calculation_name = calculation_name
 
     @override
     def generate(self) -> dict[str, str]:
@@ -587,20 +585,20 @@ fi
 """
 
 
-class FileControl(Calclation):
+class FileControl(Calculation):
     """
     A class for performing file manipulation operations within GROMACS workflows.
     It allows defining custom shell commands to be executed.
     """
 
-    def __init__(self, name: str, command: str):
+    def __init__(self, calculation_name: str, command: str):
         """
         Initializes the FileControl object.
         Args:
-            name (str): The name of the file control operation.
+            calculation_name (str): The name of the file control operation.
             command (str): The shell command to execute.
         """
-        self.calclation_name = name
+        self.calculation_name = calculation_name
         self.command = command
 
     @override
@@ -632,7 +630,7 @@ class FileControl(Calclation):
         """
         commands = []
         commands.append(
-            "{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndn"
+            "{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndx"
         )
         commands.append(
             "echo '!MCH' | inner_gmx trjconv -f input.gro -s input.gro -o output.gro -n withoutMCH.ndx"
@@ -657,7 +655,7 @@ class FileControl(Calclation):
         """
         commands = []
         commands.append(
-            "{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndx"
+            "{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndn"
         )
         commands.append(
             "echo '!MCH' | inner_gmx trjconv -f input.gro -s input.gro -o output.gro -n withoutMCH.ndx"
@@ -677,7 +675,7 @@ class FileControl(Calclation):
 
 
 @dataclass(kw_only=True)
-class BarMethod(Calclation):
+class BarMethod(Calculation):
     """
     A class to represent a Free Energy Perturbation (FEP) calculation using the BAR method.
     Attributes:
@@ -818,7 +816,7 @@ class OverwriteType(enum.Enum):
 
 
 def launch(
-    calculations: list[Calclation],
+    calculations: list[Calculation],
     input_gro: str,
     working_dir: str,
     overwrite: OverwriteType = OverwriteType.no,
@@ -827,7 +825,7 @@ def launch(
     Launches a series of GROMACS calculations.
     Creates working directories, generates necessary files, and sets up run scripts.
     Args:
-        calculations (list[Calclation]): A list of Calclation objects to run.
+        calculations (list[Calculation]): A list of Calculation objects to run.
         input_gro (str): The path to the initial input .gro file.
         working_dir (str): The base directory where calculation folders will be created.
         overwrite (OverwriteType): The strategy for handling existing working directories.
@@ -992,3 +990,58 @@ def generate_batch_execution_script(
             f.write("\n")
 
         f.write("echo All calculations are done")
+
+
+class CalculationJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if dataclasses.is_dataclass(o):
+            d = dataclasses.asdict(o)
+            d['__class__'] = o.__class__.__name__
+            return d
+        if isinstance(o, enum.Enum):
+            return o.value
+        if isinstance(o, Calculation):
+            d = o.__dict__.copy()
+            d['__class__'] = o.__class__.__name__
+            return d
+
+        return super().default(o)
+
+
+def save_json(calculations: list[Calculation], filepath: str):
+    with open(filepath, 'w') as f:
+        json.dump(calculations, f, cls=CalculationJSONEncoder, indent=4)
+
+
+CALCULATION_REGISTRY = {
+    cls.__name__: cls for cls in Calculation.__subclasses__()
+}
+
+
+def load_json(filepath: str) -> list[Calculation]:
+    with open(filepath, 'r') as f:
+        data = json.load(f)
+
+    calculations = []
+    for item in data:
+        class_name = item.pop('__class__')
+        cls = CALCULATION_REGISTRY.get(class_name)
+
+        if cls is None:
+            raise ValueError(f"Unknown class: {class_name}")
+
+        # Get the constructor parameters and their types
+        sig = inspect.signature(cls)
+        params = sig.parameters
+
+        # Iterate over the item's keys and convert enum values
+        for key, value in item.items():
+            if key in params:
+                param = params[key]
+                param_type = param.annotation
+                if inspect.isclass(param_type) and issubclass(param_type, enum.Enum):
+                    item[key] = param_type(value)
+
+        calculations.append(cls(**item))
+
+    return calculations
