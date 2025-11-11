@@ -28,10 +28,8 @@ jobs:
         run: |
           uv sync
 
-      - name: Run unittests sequentially
+      - name: Run unittests
         run: |
-          echo "Running all unittests recursively with uv..."
-          find tests -type f -name "test_*.py" | sort | while read test_file; do
-            echo ">>> Running $test_file"
-            uv run python -m unittest "$test_file" || exit 1
-          done
+          echo "Running all unittests..."
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          uv run python -m unittest discover tests

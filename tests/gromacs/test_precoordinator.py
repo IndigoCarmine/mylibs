@@ -2,9 +2,8 @@ import sys
 import unittest
 import numpy as np
 
-sys.path.append("src")
-from mole.xyz import XyzMolecule, XyzAtom
-from gromacs.pre_coordinator import (
+from src.mole.xyz import XyzMolecule, XyzAtom
+from src.gromacs.pre_coordinator import (
     get_substructure_match,
     pre_coordinate,
     precooredinate2,

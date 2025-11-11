@@ -5,8 +5,8 @@ which can be useful for setting up GROMACS simulations or other molecular analys
 """
 
 from scipy.spatial.transform import Rotation
-import mole.molecules as molecules
-import mole.xyz as xyz
+from src.mole import molecules
+from src.mole import xyz
 import numpy as np
 import rdkit.Chem as Chem
 

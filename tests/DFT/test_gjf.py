@@ -2,10 +2,7 @@ import unittest
 import sys
 import os
 
-# Add the src directory to the Python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
-
-from DFT.gjf import CalculationType
+from src.DFT.gjf import CalculationType
 
 class TestCalculationType(unittest.TestCase):
 

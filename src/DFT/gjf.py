@@ -3,8 +3,7 @@ This module provides classes for generating Gaussian Job Files (GJF) for DFT cal
 It includes classes to define allocation properties, calculation types, and the overall GJF structure.
 """
 import dataclasses
-import mole
-import mole.xyz
+from src.mole import xyz
 
 
 @dataclasses.dataclass
@@ -93,7 +92,7 @@ class GJFFile:
     """
     allocation: AllocationProperty = dataclasses.field(default_factory=AllocationProperty)
     calculation_type: CalculationType = dataclasses.field(default_factory=CalculationType)
-    molecule: mole.xyz.XyzMolecule = dataclasses.field(default_factory=lambda: mole.xyz.XyzMolecule(name="unnamed", index=0, children=[]))
+    molecule: xyz.XyzMolecule = dataclasses.field(default_factory=lambda: xyz.XyzMolecule(name="unnamed", index=0, children=[]))
     title: str = "GJF file"
     charge: int = 0
     multiplicity: int = 1

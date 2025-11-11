@@ -15,7 +15,7 @@ import shutil
 from typing import override
 
 import json
-import gromacs.mdp as mdp
+from src.gromacs import mdp
 import numpy as np
 
 
