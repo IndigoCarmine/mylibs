@@ -4,10 +4,7 @@ import os
 import tempfile
 import numpy as np
 
-# Add the src directory to the Python path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
-
-from mole.xyz import XyzMolecule, XyzAtom
+from src.mole.xyz import XyzMolecule, XyzAtom
 
 class TestXyzMolecule(unittest.TestCase):
 
