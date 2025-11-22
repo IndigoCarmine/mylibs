@@ -11,6 +11,28 @@ import lmfit as lf
 import base_utils.plotlib as pl
 
 
+### deplicated decorator
+import warnings
+
+
+def deprecated(reason: str):
+    def decorator(func):
+        def new_func(*args, **kwargs):
+            warnings.warn(
+                f"Function {func.__name__} is deprecated: {reason}",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
+            return func(*args, **kwargs)
+
+        return new_func
+
+    return decorator
+
+
+###
+
+
 def isodesmic(X: np.number | npt.NDArray[np.number], K: np.number | float | int):
     """
     Calculates the fraction of monomer in an isodesmic polymerization model.
@@ -60,6 +82,7 @@ def cubic(
     return x
 
 
+@deprecated("Use cooperative_stabilized instead")
 def cooperative(
     Conc: float | npt.NDArray[np.number],
     K: float | np.number,
@@ -93,6 +116,98 @@ def cooperative(
     # mono_conc = [x[0] for x in ans]
     mono_conc = ans
     mono_conc = np.array(mono_conc)
+    mono_conc = mono_conc / K
+    # ans = 1- mono_conc/Conc
+    ans = 1 - np.divide(mono_conc, Conc, out=np.ones_like(mono_conc), where=Conc != 0)
+    ans = [x if not np.isnan(x) else 0 for x in ans]
+    ans = np.array(ans)
+
+    return ans * scaler
+
+
+def solve_cubic_vectorized(
+    a, b, c, d, x_low, x_high, max_iter=60
+) -> npt.NDArray[np.float64]:
+    """
+    Solve a x^3 + b x^2 + c x + d = 0 on the interval [x_low, x_high]
+    using fully vectorized bisection.
+    Args:
+        a, b, c, d: Coefficients of the cubic equation.
+        x_low, x_high: Bounds for the root search.
+        max_iter: Maximum number of iterations for bisection.
+    Returns:
+        npt.NDArray[np.float64]: Approximated roots within the specified bounds.
+
+    Raises:
+        ValueError: If the root is not bracketed for some elements.
+        RuntimeError: If the bisection does not converge within the maximum number of iterations.
+    """
+
+    # Shape unification
+    a = np.asarray(a)
+    b = np.asarray(b)
+    c = np.asarray(c)
+    d = np.asarray(d)
+
+    # Initial bounds
+    xl: npt.NDArray[np.float64] = np.asarray(x_low, dtype=np.float64)
+    xr: npt.NDArray[np.float64] = np.asarray(x_high, dtype=np.float64)
+
+    # Evaluate cubic
+    def f(x):
+        return a * x**3 + b * x**2 + c * x + d
+
+    fl = f(xl)
+    fr = f(xr)
+    mask_valid = fl * fr <= 0
+    if not np.all(mask_valid):
+        raise ValueError("Root not bracketed for some elements.")
+
+    # Bisection method loop
+    for _ in range(max_iter):
+        xm = 0.5 * (xl + xr)
+        fm = f(xm)
+
+        left_mask = fl * fm <= 0
+        xr[left_mask] = xm[left_mask]
+        xl[~left_mask] = xm[~left_mask]
+        fl = f(xl)
+
+    if not np.all(np.abs(xr - xl) < 1e-12):
+        raise RuntimeError(
+            "Bisection did not converge within the maximum number of iterations."
+        )
+    return 0.5 * (xl + xr)
+
+
+def cooperative_stabilized(
+    Conc: float | npt.NDArray[np.number],
+    K: float | np.number,
+    sigma: float | np.number,
+    scaler: float | np.number = 1,
+) -> float | npt.NDArray[np.number]:
+    """
+    Calculates the rate of supramolecular polymer formation based on a cooperative binding model.
+    Args:
+        Conc (float | npt.NDArray[np.number]): Total concentration of the substrate.
+        K (float | np.number): Equilibrium constant.
+        sigma (float | np.number): Cooperativity factor.
+        scaler (float | np.number): Scaling factor for the output.
+    Returns:
+        float | npt.NDArray[np.number]: Rate of supramolecular polymer formation.
+    """
+    scaled_conc = K * Conc
+    a = 1 - sigma
+    b = -(2 * a + scaled_conc)
+    c = 1 + 2 * scaled_conc
+    d = -scaled_conc
+    # x^3 + bx^2 + cx + d = 0
+    # max concentration of monomer (scaled) is [0,1]
+    # because of convergence condition
+    x_low = np.zeros_like(scaled_conc)
+    x_high = np.ones_like(scaled_conc)
+
+    mono_conc = solve_cubic_vectorized(a, b, c, d, x_low, x_high)
     mono_conc = mono_conc / K
     # ans = 1- mono_conc/Conc
     ans = 1 - np.divide(mono_conc, Conc, out=np.ones_like(mono_conc), where=Conc != 0)
