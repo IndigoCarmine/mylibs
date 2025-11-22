@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import lmfit as lf
 import base_utils.plotlib as pl
+import numpy.typing as npt
 
 def isodesmic(X, K): ...
 def cubic(b, c, d) -> float: ...
@@ -14,12 +15,26 @@ def cooperative(Conc, K, sigma, scaler=1) -> np.ndarray:
     return: rate of supramolecular polymer formation
     """
 
-def temp_cooperative(Temp, deltaH, deltaS, deltaHnuc, c_tot, scaler=1) -> np.ndarray:...
+def cooperative_stabilized(
+    Conc: float | npt.NDArray[np.number],
+    K: float | np.number,
+    sigma: float | np.number,
+    scaler: float | np.number = 1,
+) -> float | npt.NDArray[np.number]:
+    """
+    Conc: total concentration of substrate
+    K: equilibrium constant
+    sigma: cooperativity factor
 
+    return: rate of supramolecular polymer formation
+    """
+
+def temp_cooperative(
+    Temp, deltaH, deltaS, deltaHnuc, c_tot, scaler=1
+) -> np.ndarray: ...
 def model(
     params: lf.Parameters, x: np.ndarray, c_tot: float, scaler: float
-) -> np.ndarray:...
-
+) -> np.ndarray: ...
 def objective(params: lf.Parameters, data: list[pl.XYData]) -> np.ndarray:
     """
     params: parameters for the model
