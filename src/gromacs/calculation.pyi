@@ -34,8 +34,9 @@ class EM(Calclation):
 
 class MDType(enum.Enum):
     v_rescale_c_rescale = 1
-    nose_hoover_parinello_rahman = 2
-    berendsen = 3
+    v_rescale_only_nvt = 2
+    nose_hoover_parinello_rahman = 3
+    berendsen = 4
 
 @dataclass(kw_only=True)
 class MD(Calclation):

@@ -52,7 +52,9 @@ class Calculation(ABC):
         Returns:
             dict[str, str]: A dictionary where keys are file names and values are file contents.
         """
-        raise NotImplementedError("This method must be implemented. " + "Abstract method was called")
+        raise NotImplementedError(
+            "This method must be implemented. " + "Abstract method was called"
+        )
 
     @property
     @abstractmethod
@@ -136,8 +138,9 @@ class MDType(enum.Enum):
     """
 
     v_rescale_c_rescale = 1
-    nose_hoover_parinello_rahman = 2
-    berendsen = 3
+    v_rescale_only_nvt = 2
+    nose_hoover_parinello_rahman = 3
+    berendsen = 4
 
 
 @dataclass(kw_only=True)
@@ -276,8 +279,45 @@ class MD(Calculation):
                     "ovito.sh": defaut_file_content("ovito.sh"),
                 }
 
+            case MDType.v_rescale_only_nvt:
+                options_txt = " -maxwarn " + str(self.maxwarn)
+                mdp_file = (
+                    mdp.MDParameters(mdp.V_RESCALE_ONLY_NVT_MDP)
+                    .add_or_update("nsteps", self.nsteps)
+                    .add_or_update("nstxout", self.nstout)
+                    .add_or_update("nstvout", self.nstout)
+                    .add_or_update("nstfout", self.nstout)
+                    .add_or_update("nstenergy", self.nstout)
+                    .add_or_update("gen_vel", self.gen_vel)
+                    .add_or_update("ref_t", self.temperature)
+                    .add_or_update("gen_temp", self.temperature)
+                )
+                for key, value in self.additional_mdp_parameters.items():
+                    mdp_file.add_or_update(key, str(value))
+                if self.useRestraint:
+                    options_txt += " -r input.gro"
+                    mdp_file.add_or_update("refcoord_scaling", "all")
+                if len(self.defines) != 0:
+                    mdp_file.add_or_update(
+                        "define", " ".join(["-D" + define for define in self.defines])
+                    )
+                if self.useSemiisotropic:
+                    warnings.warn(
+                        "Semiisotropic is not supported in NVT. Do you understand NVT ensemble?"
+                    )
+
+                return {
+                    "setting.mdp": mdp_file.export(),
+                    "grommp.sh": defaut_file_content("grommp.sh").format(
+                        options=options_txt
+                    ),
+                    "mdrun.sh": defaut_file_content("mdrun.sh"),
+                    "generate_xtc.sh": defaut_file_content("generate_xtc.sh"),
+                    "ovito.sh": defaut_file_content("ovito.sh"),
+                }
+
             case MDType.nose_hoover_parinello_rahman:
-                raise NotImplementedError("parameters are not linked to the mdp file")
+                # raise NotImplementedError("parameters are not linked to the mdp file")
                 options_txt = " -maxwarn " + str(self.maxwarn)
                 mdp_file = (
                     mdp.MDParameters(mdp.NOSE_HOOVER_PARINELLO_RAHMAN_MDP)
@@ -291,9 +331,7 @@ class MD(Calculation):
                     .add_or_update("gen_temp", self.temperature)
                 )
                 return {
-                    "setting.mdp": defaut_file_content(
-                        "nose_hoover_parinello_rahman.mdp"
-                    ),
+                    "setting.mdp": mdp_file.export(),
                     "grommp.sh": defaut_file_content("grommp.sh").format(
                         options=options_txt
                     ),
@@ -996,35 +1034,33 @@ class CalculationJSONEncoder(json.JSONEncoder):
     def default(self, o):
         if dataclasses.is_dataclass(o):
             d = dataclasses.asdict(o)
-            d['__class__'] = o.__class__.__name__
+            d["__class__"] = o.__class__.__name__
             return d
         if isinstance(o, enum.Enum):
             return o.value
         if isinstance(o, Calculation):
             d = o.__dict__.copy()
-            d['__class__'] = o.__class__.__name__
+            d["__class__"] = o.__class__.__name__
             return d
 
         return super().default(o)
 
 
 def save_json(calculations: list[Calculation], filepath: str):
-    with open(filepath, 'w') as f:
+    with open(filepath, "w") as f:
         json.dump(calculations, f, cls=CalculationJSONEncoder, indent=4)
 
 
-CALCULATION_REGISTRY = {
-    cls.__name__: cls for cls in Calculation.__subclasses__()
-}
+CALCULATION_REGISTRY = {cls.__name__: cls for cls in Calculation.__subclasses__()}
 
 
 def load_json(filepath: str) -> list[Calculation]:
-    with open(filepath, 'r') as f:
+    with open(filepath, "r") as f:
         data = json.load(f)
 
     calculations = []
     for item in data:
-        class_name = item.pop('__class__')
+        class_name = item.pop("__class__")
         cls = CALCULATION_REGISTRY.get(class_name)
 
         if cls is None:

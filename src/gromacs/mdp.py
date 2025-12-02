@@ -194,6 +194,36 @@ V_RESCALE_C_RESCALE_MDP = {
     "pbc": "xyz",
 }
 
+V_RESCALE_ONLY_NVT_MDP = {
+    "integrator": "md",
+    "dt": "0.002",
+    "nsteps": "nsteps",
+    "nstxout": "nstxout",
+    "nstvout": "nstvout",
+    "nstfout": "nstfout",
+    "nstenergy": "nstenergy",
+    "cutoff-scheme": "verlet",
+    "constraints": "h-bonds",
+    "constraint_algorithm": "LINCS",
+    "nstlist": "10",
+    "ns_type": "grid",
+    "tcoupl": "v-rescale",
+    "tc_grps": "system",
+    "tau_t": "0.2",
+    "ref_t": "ref_t",
+    "rlist": "1.4",
+    "coulombtype": "PME",
+    "rcoulomb": "1.4",
+    "fourierspacing": "0.30",
+    "pme_order": "4",
+    "vdwtype": "Cut-off",
+    "rvdw": "1.4",
+    "Pcoupl": "no",
+    "gen_vel": "gen_vel",
+    "gen_temp": "gen_temp",
+    "pbc": "xyz",
+}
+
 
 NOSE_HOOVER_PARINELLO_RAHMAN_MDP = {
     "integrator": "md",
