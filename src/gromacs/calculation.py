@@ -15,7 +15,7 @@ import shutil
 from typing import override
 
 import json
-from gromacs import mdp
+from . import mdp
 import numpy as np
 
 
