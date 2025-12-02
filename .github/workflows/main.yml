@@ -33,3 +33,9 @@ jobs:
           echo "Running all unittests..."
           export PYTHONPATH=$PYTHONPATH:$(pwd)
           uv run python -m unittest discover tests
+      
+      - name: Run mypy
+        run: |
+          echo "Running all mypy..."
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          uv run mypy .\src\ --enable-incomplete-feature=NewGenericSyntax

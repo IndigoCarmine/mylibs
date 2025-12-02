@@ -1,6 +1,6 @@
 [project]
 name = "yagaiG-libs"
-version = "0.2.7"
+version = "0.2.8"
 authors = [{ name = "Yuhei Yamada", email = "tamanisikamiani@gmail.com" }]
 description = "This library contains a mixture of code that can be used with YagaiG's measuring equipment and code for MD. In fact, it should have a more decent structure, but it was too much trouble, so we packaged it as it is."
 readme = "README.md"
@@ -25,7 +25,9 @@ dependencies = [
     "pyparsing",
     "lmfit",
     "ref-for-llm",
-    "rdkit"
+    "rdkit",
+    "pandas-stubs>=2.3.3.251201",
+    "scipy-stubs>=1.16.3.2",
 ]
 
 
@@ -39,4 +41,6 @@ dev = ["build", "twine", "mypy"]
 ref-for-llm = { git = "https://github.com/IndigoCarmine/ref_for_llm.git" }
 
 [dependency-groups]
-dev = ["vermin>=1.7.0"]
+dev = [
+    "vermin>=1.7.0",
+]
