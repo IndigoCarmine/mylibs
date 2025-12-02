@@ -68,7 +68,7 @@ class RuntimeSolvation(Calclation):
         self,
         *,
         solvent: str = "MCH",
-        name: str = "solvation",
+        calculation_name: str = "solvation",
         rate: float = 1.0,
         ntry: int = 300,
     ): ...
