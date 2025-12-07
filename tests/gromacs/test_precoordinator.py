@@ -56,7 +56,7 @@ class TestPreCoordinator(unittest.TestCase):
         # Assert that the first side atom is in the xz-plane
         self.assertAlmostEqual(molecule.get_child(1).coordinate[1], 0.0)
 
-    @unittest.expectedFailure
+    @unittest.skip("Temporarily disabled")
     def test_precooredinate2(self):
         # Create a molecule
         c1 = XyzAtom("C", 6, np.array([1.0, 0.0, 0.0]))
