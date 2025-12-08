@@ -1,6 +1,6 @@
 [project]
 name = "yagaiG-libs"
-version = "0.2.8"
+version = "0.2.9"
 authors = [{ name = "Yuhei Yamada", email = "tamanisikamiani@gmail.com" }]
 description = "This library contains a mixture of code that can be used with YagaiG's measuring equipment and code for MD. In fact, it should have a more decent structure, but it was too much trouble, so we packaged it as it is."
 readme = "README.md"
@@ -42,5 +42,6 @@ ref-for-llm = { git = "https://github.com/IndigoCarmine/ref_for_llm.git" }
 
 [dependency-groups]
 dev = [
+    "mypy>=1.19.0",
     "vermin>=1.7.0",
 ]

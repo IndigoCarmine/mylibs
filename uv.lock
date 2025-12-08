@@ -1395,7 +1395,7 @@ wheels = [
 
 [[package]]
 name = "yagaig-libs"
-version = "0.2.7"
+version = "0.2.8"
 source = { virtual = "." }
 dependencies = [
     { name = "annotated-types" },
@@ -1425,6 +1425,7 @@ dev = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "mypy" },
     { name = "vermin" },
 ]
 
@@ -1453,4 +1454,7 @@ requires-dist = [
 provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "vermin", specifier = ">=1.7.0" }]
+dev = [
+    { name = "mypy", specifier = ">=1.19.0" },
+    { name = "vermin", specifier = ">=1.7.0" },
+]
