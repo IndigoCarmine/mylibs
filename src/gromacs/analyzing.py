@@ -3,6 +3,7 @@ This module provides tools for analyzing GROMACS simulation data.
 It includes functionalities for recording and managing analysis results,
 processing multiple simulation files, and generating analysis scripts.
 """
+
 from concurrent.futures import ProcessPoolExecutor
 import copy
 import os
@@ -11,9 +12,8 @@ import MDAnalysis as mda
 from functools import partial, total_ordering
 from base_utils import cui_utils
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
-
-import base_utils.typecheck as tc
 
 
 @total_ordering
@@ -22,6 +22,7 @@ class Recorder:
     A class to record and manage analysis results for a specific calculation.
     It stores named values and log data, and supports concatenation with other Recorders.
     """
+
     calc_name: str
     values: list[tuple[str, float]]
     log_data: list[str]
@@ -53,7 +54,9 @@ class Recorder:
         """
         self.values.append((name, val))
 
-    def add_value_of_default_array_analysis(self, name: str, array: float):
+    def add_value_of_default_array_analysis(
+        self, name: str, array: npt.NDArray[np.number]
+    ):
         """
         Adds mean and standard deviation of a numerical array as named values.
         Args:
@@ -111,7 +114,6 @@ class Recorder:
         return self.calc_name < other.calc_name
 
 
-@tc.type_check
 def generate_excel(file_name: str, recoders: list[Recorder]):
     """
     Generates an Excel file from a list of Recorder objects.
@@ -136,7 +138,6 @@ def generate_excel(file_name: str, recoders: list[Recorder]):
     data.to_excel(file_name)
 
 
-@tc.type_check
 def mixing_recorders(
     base_recorder_list: list[Recorder], recorder_list: list[Recorder]
 ) -> list[Recorder]:
@@ -159,7 +160,6 @@ def mixing_recorders(
     return new_recorders
 
 
-@tc.type_check
 def perocess_files(
     calculation_basedir: str,
     last_calc,
@@ -206,7 +206,6 @@ def perocess_files(
     return recorders
 
 
-@tc.type_check
 def _analyze_trj_inner(
     path: str, work: Callable[[mda.Universe, str], Recorder]
 ) -> Recorder | None:
@@ -230,7 +229,6 @@ def _analyze_trj_inner(
     return work(u, path)
 
 
-@tc.type_check
 def analyze_trj(
     calculation_basedir: str,
     last_calc,
@@ -274,7 +272,6 @@ def get_calcname(calc_path: str) -> str:
     return os.path.split(splitedpath[0])[1]
 
 
-@tc.type_check
 def grouping[T](groups: list[T], group_size: int) -> Iterator[list[T]]:
     """
     Groups a list into sub-lists of a specified size.
@@ -299,10 +296,10 @@ class _Addable[T](Protocol):
     """
     A Protocol defining types that support the addition operation.
     """
+
     def __add__(self: T, other: T) -> T: ...
 
 
-@tc.type_check
 def concat(group: list[_Addable]) -> _Addable:
     """
     Concatenates a list of addable objects using their __add__ method.
@@ -317,7 +314,6 @@ def concat(group: list[_Addable]) -> _Addable:
     return temp
 
 
-@tc.type_check
 def make_analyze_command_script(
     basedir: str, calcname: str, command: str, commandname: str
 ):
