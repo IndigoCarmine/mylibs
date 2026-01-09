@@ -1,4 +1,4 @@
-import mole.molecules as molecules
+from mole import molecules
 
 def pre_coordinate[T: molecules.IMolecule](
     molecule: T, topO: int, aromaticsideO: int, aromaticothersideO: int

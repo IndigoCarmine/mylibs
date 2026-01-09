@@ -1,6 +1,6 @@
 [project]
 name = "yagaiG-libs"
-version = "0.2.9"
+version = "0.2.10"
 authors = [{ name = "Yuhei Yamada", email = "tamanisikamiani@gmail.com" }]
 description = "This library contains a mixture of code that can be used with YagaiG's measuring equipment and code for MD. In fact, it should have a more decent structure, but it was too much trouble, so we packaged it as it is."
 readme = "README.md"
@@ -26,8 +26,8 @@ dependencies = [
     "lmfit",
     "ref-for-llm",
     "rdkit",
-    "pandas-stubs>=2.3.3.251201",
-    "scipy-stubs>=1.16.3.2",
+    "pandas-stubs",
+    "scipy-stubs",
 ]
 
 
