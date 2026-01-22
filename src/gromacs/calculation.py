@@ -52,9 +52,7 @@ class Calculation(ABC):
         Returns:
             dict[str, str]: A dictionary where keys are file names and values are file contents.
         """
-        raise NotImplementedError(
-            "This method must be implemented. " + "Abstract method was called"
-        )
+        raise NotImplementedError("This method must be implemented. " + "Abstract method was called")
 
     @property
     @abstractmethod
@@ -109,9 +107,7 @@ class EM(Calculation):
                 .add_or_update("nsteps", self.nsteps)
                 .add_or_update("emtol", self.emtol)
                 .export(),
-                "grommp.sh": defaut_file_content("grommp.sh").format(
-                    options=options_txt
-                ),
+                "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
                 "mdrun.sh": defaut_file_content("mdrun.sh"),
                 "ovito.sh": defaut_file_content("em_ovito.sh"),
             }
@@ -120,13 +116,9 @@ class EM(Calculation):
                 "setting.mdp": mdp.MDParameters(mdp.EM_MDP)
                 .add_or_update("nsteps", self.nsteps)
                 .add_or_update("emtol", self.emtol)
-                .add_or_update(
-                    "define", " ".join(["-D" + define for define in self.defines])
-                )
+                .add_or_update("define", " ".join(["-D" + define for define in self.defines]))
                 .export(),
-                "grommp.sh": defaut_file_content("grommp.sh").format(
-                    options=options_txt
-                ),
+                "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
                 "mdrun.sh": defaut_file_content("mdrun.sh"),
                 "ovito.sh": defaut_file_content("em_ovito.sh"),
             }
@@ -195,9 +187,7 @@ class MD(Calculation):
     maxwarn: int = 0
     useRestraint: bool = False
     useSemiisotropic: bool = False
-    additional_mdp_parameters: dict[str, str | float] = dataclasses.field(
-        default_factory=dict
-    )
+    additional_mdp_parameters: dict[str, str | float] = dataclasses.field(default_factory=dict)
 
     def __post_init__(self):
         """
@@ -259,14 +249,10 @@ class MD(Calculation):
                     options_txt += " -r input.gro"
                     mdp_file.add_or_update("refcoord_scaling", "all")
                 if len(self.defines) != 0:
-                    mdp_file.add_or_update(
-                        "define", " ".join(["-D" + define for define in self.defines])
-                    )
+                    mdp_file.add_or_update("define", " ".join(["-D" + define for define in self.defines]))
                 if self.useSemiisotropic:
                     mdp_file.add_or_update("pcoupltype", "semiisotropic")
-                    mdp_file.add_or_update(
-                        "ref_p", " ".join([str(mdp_file.get("ref_p")) for _ in range(2)])
-                    )
+                    mdp_file.add_or_update("ref_p", " ".join([str(mdp_file.get("ref_p")) for _ in range(2)]))
                     mdp_file.add_or_update(
                         "compressibility",
                         " ".join([str(mdp_file.get("compressibility")) for _ in range(2)]),
@@ -274,9 +260,7 @@ class MD(Calculation):
 
                 return {
                     "setting.mdp": mdp_file.export(),
-                    "grommp.sh": defaut_file_content("grommp.sh").format(
-                        options=options_txt
-                    ),
+                    "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
                     "mdrun.sh": defaut_file_content("mdrun.sh"),
                     "generate_xtc.sh": defaut_file_content("generate_xtc.sh"),
                     "ovito.sh": defaut_file_content("ovito.sh"),
@@ -301,19 +285,13 @@ class MD(Calculation):
                     options_txt += " -r input.gro"
                     mdp_file.add_or_update("refcoord_scaling", "all")
                 if len(self.defines) != 0:
-                    mdp_file.add_or_update(
-                        "define", " ".join(["-D" + define for define in self.defines])
-                    )
+                    mdp_file.add_or_update("define", " ".join(["-D" + define for define in self.defines]))
                 if self.useSemiisotropic:
-                    warnings.warn(
-                        "Semiisotropic is not supported in NVT. Do you understand NVT ensemble?"
-                    )
+                    warnings.warn("Semiisotropic is not supported in NVT. Do you understand NVT ensemble?")
 
                 return {
                     "setting.mdp": mdp_file.export(),
-                    "grommp.sh": defaut_file_content("grommp.sh").format(
-                        options=options_txt
-                    ),
+                    "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
                     "mdrun.sh": defaut_file_content("mdrun.sh"),
                     "generate_xtc.sh": defaut_file_content("generate_xtc.sh"),
                     "ovito.sh": defaut_file_content("ovito.sh"),
@@ -335,9 +313,7 @@ class MD(Calculation):
                 )
                 return {
                     "setting.mdp": mdp_file.export(),
-                    "grommp.sh": defaut_file_content("grommp.sh").format(
-                        options=options_txt
-                    ),
+                    "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
                     "mdrun.sh": defaut_file_content("mdrun.sh"),
                     "generate_xtc.sh": defaut_file_content("generate_xtc.sh"),
                     "ovito.sh": defaut_file_content("ovito.sh"),
@@ -346,9 +322,7 @@ class MD(Calculation):
                 raise NotImplementedError("parameters are not linked to the mdp file")
                 return {
                     "setting.mdp": defaut_file_content("berendsen.mdp"),
-                    "grommp.sh": defaut_file_content("grommp.sh").format(
-                        options=options_txt
-                    ),
+                    "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
                     "mdrun.sh": defaut_file_content("mdrun.sh"),
                     "generate_xtc.sh": defaut_file_content("generate_xtc.sh"),
                     "ovito.sh": defaut_file_content("ovito.sh"),
@@ -402,6 +376,7 @@ class RuntimeSolvation(Calculation):
         match solvent:
             case "MCH":
                 self.solvent = "MCH"
+                print("using this class for MCH solvent is deprecated. Use SolvationMCH class instead.")
             case "H2O":
                 raise ValueError("H2O should be used spc216.gro (SolvateSCP216 class)")
             case _:
@@ -603,6 +578,76 @@ class SolvationSCP216(Calculation):
         return self.calculation_name
 
 
+class SolvationMCH(Calculation):
+    """
+    A class to represent a solvation calculation using MCH solvent.
+    Attributes:
+        name (str): The name of the calculation.
+    """
+
+    def __init__(self, calculation_name: str = "solvation"):
+        """
+        Initializes the SolvationMCH object.
+        Args:
+            calculation_name (str): The name of the calculation.
+        """
+        self.calculation_name = calculation_name
+
+    @override
+    def generate(self) -> dict[str, str]:
+        """
+        Generates the necessary files for the MCH solvation calculation.
+        Returns:
+            dict[str, str]: A dictionary where keys are file names and values are file contents.
+        """
+        return {
+            "dummy.top": "",
+            "grommp.sh": "echo 'this is a dummy file for automation'",
+            "top_mod.py": defaut_file_content("top_mod.py"),
+            "add_mchitp.py": defaut_file_content("add_mchitp.py"),
+            "mdrun.sh": _gmx_alias
+            + "\n\n\n"
+            + "inner_gmx solvate -cp input.gro -cs MCH_solventbox.gro -o output.gro -p dummy.top \n\n\n"
+            + "python top_mod.py \n\n\n"
+            + "python add_mchitp.py",
+            "MCH.itp": defaut_file_content("MCH.itp"),
+            "MCH_solventbox.gro": defaut_file_content("MCH_solventbox.gro"),
+        }
+
+    @property
+    @override
+    def name(self) -> str:
+        return self.calculation_name
+
+    def check(self, cell_size: np.ndarray) -> "SolvationMCH":
+        """
+        Prints the number of molecules to be added to the cell and the number of atoms.
+        Args:
+            cell_size (np.ndarray): The dimensions of the simulation cell.
+        Returns:
+            RuntimeSolvation: The current instance of RuntimeSolvation.
+        Raises:
+            ValueError: If an invalid solvent is specified.
+        """
+
+        volume = np.prod(cell_size)  # nm^3
+
+        Na = 6.022 * 100  # *10e21 # Avogadro's number
+
+        density = 0.77  # g/cm^3
+        mass = 98.186  # g/mol
+        mass_den = mass / density  # cm^3/mol = nm^3/mol * 10e21
+
+        # number of molecules
+        nmol = int(volume / mass_den * Na)
+        natoms = nmol * 20  # number of atoms
+
+        print("I will fill the cell with", nmol, "molecules")
+        print("The cell contains", natoms, "atoms")
+
+        return self
+
+
 _gmx_alias = """
 # for supporting all gmx (gmx_d, gmx_mpi, gmx) commands
 # Enable alias expansion
@@ -669,12 +714,8 @@ class FileControl(Calculation):
             FileControl: A FileControl object configured for MCH removal.
         """
         commands = []
-        commands.append(
-            "{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndx"
-        )
-        commands.append(
-            "echo '!MCH' | inner_gmx trjconv -f input.gro -s input.gro -o output.gro -n withoutMCH.ndx"
-        )
+        commands.append("{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndx")
+        commands.append("echo '!MCH' | inner_gmx trjconv -f input.gro -s input.gro -o output.gro -n withoutMCH.ndx")
 
         # remove MCH from the topology file
         commands.append("sed -i '/MCH/d' topol.top")
@@ -694,21 +735,15 @@ class FileControl(Calculation):
             FileControl: A FileControl object configured for cell resizing.
         """
         commands = []
-        commands.append(
-            "{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndn"
-        )
-        commands.append(
-            "echo '!MCH' | inner_gmx trjconv -f input.gro -s input.gro -o output.gro -n withoutMCH.ndx"
-        )
+        commands.append("{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndn")
+        commands.append("echo '!MCH' | inner_gmx trjconv -f input.gro -s input.gro -o output.gro -n withoutMCH.ndx")
 
         # remove MCH from the topology file
         commands.append("sed -i '/MCH/d' topo.top")
 
         # resize the cell
         commands.append(
-            "echo 1 | inner_gmx editconf -f output.gro -o output.gro -box {x} {y} {z}".format(
-                x=x, y=y, z=z
-            )
+            "echo 1 | inner_gmx editconf -f output.gro -o output.gro -box {x} {y} {z}".format(x=x, y=y, z=z)
         )
         # remove lines
         return cls(name, "\n".join(commands))
@@ -929,18 +964,12 @@ fi
         # addtionally, if there is a next calculation,
         # create a script to copy inherited files
         with open(os.path.join(dirname, "copy.sh"), "w", newline="\n") as f:
-            f.write(
-                copy_inherited_files_script(
-                    str(i + 1) + "_" + (calculations[i + 1].name)
-                )
-            )
+            f.write(copy_inherited_files_script(str(i + 1) + "_" + (calculations[i + 1].name)))
             f.write(f"\necho {calculation.name} is done")
             f.write(f"\necho Next calculation is {calculations[i + 1].name}")
 
     # copy input file to the first calculation
-    shutil.copy2(
-        input_gro, os.path.join(working_dir, "0_" + calculations[0].name, "input.gro")
-    )
+    shutil.copy2(input_gro, os.path.join(working_dir, "0_" + calculations[0].name, "input.gro"))
 
     # create a script to all the calculations
 
@@ -972,9 +1001,7 @@ def generate_stepbystep_runfile(
         calc_path (str): The base path for the calculation directories.
     """
     for calculation_name, do_paralel in calculation_name_and_isparaleljob:
-        with open(
-            os.path.join(calc_path, f"{calculation_name}.sh"), "w", newline="\n"
-        ) as f:
+        with open(os.path.join(calc_path, f"{calculation_name}.sh"), "w", newline="\n") as f:
             if do_paralel:
                 f.write("echo 'Starting paralel job'\n")
             for file in init_structures:
