@@ -262,11 +262,11 @@ class MD(Calculation):
                 if self.useSemiisotropic:
                     mdp_file.add_or_update("pcoupltype", "semiisotropic")
                     mdp_file.add_or_update(
-                        "ref_p", " ".join([mdp_file.get("ref_p") for _ in range(2)])
+                        "ref_p", " ".join([str(mdp_file.get("ref_p")) for _ in range(2)])
                     )
                     mdp_file.add_or_update(
                         "compressibility",
-                        " ".join([mdp_file.get("compressibility") for _ in range(2)]),
+                        " ".join([str(mdp_file.get("compressibility")) for _ in range(2)]),
                     )
 
                 return {
@@ -652,10 +652,9 @@ class FileControl(Calculation):
             "mdrun.sh": command,
         }
 
-    @override
     @property
     def name(self) -> str:
-        return self.calclation_name
+        return self.calculation_name
 
     @classmethod
     def remove_MCH(cls, name: str):

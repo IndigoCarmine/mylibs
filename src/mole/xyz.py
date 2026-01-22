@@ -12,7 +12,7 @@ from scipy.optimize import curve_fit
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from src.mole.molecules import AtomBase, IMolecule, Substructure
+from mole.molecules import AtomBase, IMolecule, Substructure
 
 gaussian_param_default = """%NProcShared=24
 %Chk={name}.chk

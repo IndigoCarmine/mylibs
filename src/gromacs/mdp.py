@@ -23,7 +23,7 @@ class MDParameters:
     It allows loading, modifying, and exporting MDP parameters.
     """
 
-    def __init__(self, data: dict[str, str] = {}, ignore_deepcopy=False):
+    def __init__(self, data: dict[str, str|int|float] = {}, ignore_deepcopy=False):
         """
         Initializes the MDParameters object.
         Args:
@@ -113,13 +113,13 @@ class MDParameters:
     def add_or_update(
         self,
         key: str,
-        value: str,
+        value: str|int|float,
     ) -> "MDParameters":
         """
         Adds a new key-value pair or updates an existing one in the MDP parameters.
         Args:
             key (str): The parameter key.
-            value (str): The parameter value.
+            value (str|int|float): The parameter value.
         Returns:
             MDParameters: The current MDParameters object (for chaining).
         """
@@ -139,18 +139,18 @@ class MDParameters:
 
         return self
 
-    def get(self, key: str) -> str | None:
+    def get(self, key: str) -> str | int | float | None:
         """
         Gets the value associated with a specific key.
         Args:
             key (str): The key to retrieve the value for.
         Returns:
-            str | None: The value if the key exists, otherwise None.
+            str | int | float | None: The value if the key exists, otherwise None.
         """
         return self.data.get(key, None)
 
 
-EM_MDP = {
+EM_MDP:dict[str, str|int|float] = {
     "integrator": "steep",
     "nsteps": "100000000",
     "emtol": "100",
@@ -161,7 +161,7 @@ EM_MDP = {
     "rvdw": "1",
     "pbc": "xyz",
 }
-V_RESCALE_C_RESCALE_MDP = {
+V_RESCALE_C_RESCALE_MDP:dict[str, str|int|float] = {
     "integrator": "md",
     "dt": "0.002",
     "nsteps": "nsteps",
@@ -194,7 +194,7 @@ V_RESCALE_C_RESCALE_MDP = {
     "pbc": "xyz",
 }
 
-V_RESCALE_ONLY_NVT_MDP = {
+V_RESCALE_ONLY_NVT_MDP:dict[str, str|int|float] = {
     "integrator": "md",
     "dt": "0.002",
     "nsteps": "nsteps",
@@ -225,7 +225,7 @@ V_RESCALE_ONLY_NVT_MDP = {
 }
 
 
-NOSE_HOOVER_PARINELLO_RAHMAN_MDP = {
+NOSE_HOOVER_PARINELLO_RAHMAN_MDP:dict[str, str|int|float] = {
     "integrator": "md",
     "dt": "0.002",
     "nsteps": "10000",
