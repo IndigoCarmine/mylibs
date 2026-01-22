@@ -212,6 +212,9 @@ class MD(Calculation):
             "ps or",
             self.nsteps * 0.002 / 1000,
             "ns.",
+            "This calculation will generate",
+            self.nsteps // self.nstout,
+            "frames.",
         )
 
         # input validation
