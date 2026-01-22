@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 
 def defaut_file_content(name: str) -> str: ...
 
-class Calclation(ABC, metaclass=abc.ABCMeta):
+class Calculation(ABC, metaclass=abc.ABCMeta):
     def __init__(self) -> None: ...
     @abstractmethod
     def generate(self) -> dict[str, str]: ...
@@ -17,7 +17,7 @@ class Calclation(ABC, metaclass=abc.ABCMeta):
     def name(self) -> str: ...
 
 @dataclass(kw_only=True)
-class EM(Calclation):
+class EM(Calculation):
     nsteps: int = 3000
     emtol: float = 300
     calculation_name: str = "em"
@@ -39,7 +39,7 @@ class MDType(enum.Enum):
     berendsen = 4
 
 @dataclass(kw_only=True)
-class MD(Calclation):
+class MD(Calculation):
     type: MDType
     calculation_name: str
     nsteps: int = 10000
@@ -58,7 +58,7 @@ class MD(Calclation):
     def name(self) -> str: ...
     def generate(self) -> dict[str, str]: ...
 
-class RuntimeSolvation(Calclation):
+class RuntimeSolvation(Calculation):
     solvent: str
     rate: float
     ntry: int
@@ -74,7 +74,6 @@ class RuntimeSolvation(Calclation):
     ): ...
     @override
     def generate(self) -> dict[str, str]: ...
-    @override
     @property
     def name(self) -> str: ...
     def check(self, cell_size: np.ndarray) -> "RuntimeSolvation":
@@ -103,7 +102,7 @@ class RuntimeSolvation(Calclation):
 
         return self
 
-class Solvation(Calclation):
+class Solvation(Calculation):
     """
     solvation
     """
@@ -127,7 +126,7 @@ class Solvation(Calclation):
     def name(self) -> str: ...
     def generate(self) -> dict[str, str]: ...
 
-class SolvationSCP216(Calclation):
+class SolvationSCP216(Calculation):
     def __init__(self, name: str = "solvation"): ...
     @override
     def generate(self) -> dict[str, str]: ...
@@ -135,19 +134,32 @@ class SolvationSCP216(Calclation):
     @abstractmethod
     def name(self) -> str: ...
 
-class FileControl(Calclation):
+class SolvationMCH(Calculation):
+    """
+    A class to represent a solvation calculation using MCH solvent.
+    Attributes:
+        name (str): The name of the calculation.
+    """
+
+    def __init__(self, calculation_name: str = "solvation"): ...
+    @override
+    def generate(self) -> dict[str, str]: ...
+    @property
+    @override
+    def name(self) -> str: ...
+    def check(self, cell_size: np.ndarray) -> "SolvationMCH": ...
+
+class FileControl(Calculation):
     def __init__(self, name: str, command: str) -> None: ...
     @override
     def generate(self) -> dict[str, str]: ...
     @classmethod
     def remove_MCH(cls, name: str) -> "FileControl": ...
     @classmethod
-    def cell_resizeing(
-        cls, name: str, x: float, y: float, z: float
-    ) -> "FileControl": ...
+    def cell_resizeing(cls, name: str, x: float, y: float, z: float) -> "FileControl": ...
 
 @dataclass(kw_only=True)
-class BarMethod(Calclation):
+class BarMethod(Calculation):
     calculation_name: str
     nsteps: int = 10000
 
@@ -196,7 +208,7 @@ class OverwriteType(enum.Enum):
     add_calculation = 2
 
 def launch(
-    calculations: list[Calclation],
+    calculations: list[Calculation],
     input_gro: str,
     working_dir: str,
     overwrite: OverwriteType = OverwriteType.no,
