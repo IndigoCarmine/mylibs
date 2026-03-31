@@ -185,9 +185,7 @@ class XYData:
         Raises ValueError if X and Y arrays have different lengths or are empty.
         """
         if len(self.X) != len(self.Y):
-            raise ValueError(
-                f"X and Y must have the same length: {len(self.X)} != {len(self.Y)}"
-            )
+            raise ValueError(f"X and Y must have the same length: {len(self.X)} != {len(self.Y)}")
         if len(self.X) == 0:
             raise ValueError("X and Y must not be empty")
 
@@ -267,6 +265,17 @@ class XYData:
         print("scaling factor is", 1 / np.max(self.Y))
         return XYData(self.X, y, self.dataLabel, self.Title)
 
+    def baseline_subtracted(self, baseline_range: tuple[float, float], degree_of_basefit: int) -> "XYData":
+        """
+        Returns a new XYData object with a linear baseline subtracted based on the specified X range.
+        """
+        # linear fit to the data in the specified range
+        mask = (self.X >= baseline_range[0]) & (self.X <= baseline_range[1])
+
+        coeffs = np.polyfit(self.X[mask], self.Y[mask], degree_of_basefit)
+        baseline = np.polyval(coeffs, self.X)
+        return XYData(self.X, self.Y - baseline, self.dataLabel, self.Title)
+
 
 @llm_public()
 @dataclass
@@ -315,12 +324,8 @@ class FigureOptions:
     """
 
     papar = FigureOption(default_figure_size, PlotOptions.paper)
-    presentation_white = FigureOption(
-        default_figure_size, PlotOptions.presentation, is_white_background=True
-    )
-    presentation_black = FigureOption(
-        default_figure_size, PlotOptions.presentation, is_white_background=False
-    )
+    presentation_white = FigureOption(default_figure_size, PlotOptions.presentation, is_white_background=True)
+    presentation_black = FigureOption(default_figure_size, PlotOptions.presentation, is_white_background=False)
 
 
 def _change_escape(text: str) -> str:
@@ -433,9 +438,7 @@ def load_xvgdata(path: str) -> XYData:
     data2 = np.array(data1).astype(float)
     # remove first row ( it is empty)
     data2 = data2[1:]
-    return XYData(
-        data2[:, 0], data2[:, 1], DataLabel(xaxis, "", yaxis, ""), title + " " + legend
-    )
+    return XYData(data2[:, 0], data2[:, 1], DataLabel(xaxis, "", yaxis, ""), title + " " + legend)
 
 
 @llm_public()
@@ -445,8 +448,7 @@ def convert_from_df(df: pd.DataFrame, label: DataLabel) -> list[XYData]:
     Assumes the first column of the DataFrame is the X-axis data, and subsequent columns are Y-axis data.
     """
     return [
-        XYData(np.array(df.iloc[:, 0].values), np.array(df.iloc[:, i].values), label)
-        for i in range(1, len(df.columns))
+        XYData(np.array(df.iloc[:, 0].values), np.array(df.iloc[:, i].values), label) for i in range(1, len(df.columns))
     ]
 
 
