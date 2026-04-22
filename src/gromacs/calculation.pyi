@@ -6,6 +6,8 @@ from typing import override
 import numpy as np
 from dataclasses import dataclass, field
 
+from pydantic import dataclasses
+
 def defaut_file_content(name: str) -> str: ...
 
 class Calculation(ABC, metaclass=abc.ABCMeta):
@@ -192,6 +194,27 @@ class BarMethod(Calculation):
 
 def copy_file_script(extension: str, destination: str) -> str: ...
 def copy_inherited_files_script(destination: str) -> str: ...
+@dataclass(kw_only=True)
+class AWH(Calculation):
+    calculation_name: str = "awh"
+    settingfile_abs_path: str | None = None
+    nsteps: int = 500000
+    nstout: int = 5000
+    nstout_energy: int | None = None
+    gen_vel: str = "no"
+    temperature: float = 300.0
+
+    defines: list[str] = dataclasses.field(default_factory=list)
+    additional_mdp_parameters: dict[str, str | int | float] = dataclasses.field(default_factory=dict)
+
+    maxwarn: int = 0
+    useRestraint: bool = False
+    index_file: str = "index.ndx"
+
+    @property
+    def name(self) -> str: ...
+    @override
+    def generate(self) -> dict[str, str]: ...
 
 class OverwriteType(enum.Enum):
     """

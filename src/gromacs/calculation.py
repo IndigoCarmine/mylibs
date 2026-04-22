@@ -540,6 +540,92 @@ class Solvation(Calculation):
         }
 
 
+@dataclass(kw_only=True)
+class AWH(Calculation):
+    calculation_name: str = "awh"
+    settingfile_abs_path: str | None = None
+    nsteps: int = 500000
+    nstout: int = 5000
+    nstout_energy: int | None = None
+    gen_vel: str = "no"
+    temperature: float = 300.0
+
+    defines: list[str] = dataclasses.field(default_factory=list)
+    additional_mdp_parameters: dict[str, str | int | float] = dataclasses.field(default_factory=dict)
+
+    maxwarn: int = 0
+    useRestraint: bool = False
+    index_file: str = "index.ndx"
+
+    def __post_init__(self):
+        if self.gen_vel not in ["yes", "no"]:
+            raise ValueError("Invalid gen_vel value")
+        if self.temperature < 0:
+            raise ValueError("Invalid temperature value")
+        if self.maxwarn != 0:
+            warnings.warn("maxwarn is not 0. Do you know what you are doing?")
+
+        if self.settingfile_abs_path is not None:
+            warnings.warn("settingfile_abs_path is not None. Default mdp file will be used.")
+            warnings.warn("This file cannot be used for almost all systems. Do you know what you are doing?")
+            warnings.warn(
+                "Following is default file content. Check if it is what you want. and Set settingfile_abs_path to None if you want to use default file."
+                "And This libs will overwrite some your setting property (nsteps, nstxout, etc.) in the mdp file."
+            )
+            warnings.warn(defaut_file_content("awh_setting.mdp"))
+
+        print(
+            "time span of the MD ",
+            self.calculation_name,
+            " is",
+            self.nsteps * 0.002,
+            "ps or",
+            self.nsteps * 0.002 / 1000,
+            "ns.",
+            "This calculation will generate",
+            self.nsteps // self.nstout,
+            "frames.",
+        )
+
+    @property
+    def name(self) -> str:
+        return self.calculation_name
+
+    @override
+    def generate(self) -> dict[str, str]:
+        mdp_file = (
+            mdp.MDParameters.from_text(defaut_file_content("awh_setting.mdp"))
+            .add_or_update("nsteps", self.nsteps)
+            .add_or_update("nstxout", self.nstout)
+            .add_or_update("nstvout", self.nstout)
+            .add_or_update("nstfout", self.nstout)
+            .add_or_update("nstenergy", self.nstout_energy if self.nstout_energy is not None else self.nstout)
+            .add_or_update("gen_vel", self.gen_vel)
+            .add_or_update("ref_t", self.temperature)
+            .add_or_update("gen_temp", self.temperature)
+        )
+
+        if len(self.defines) != 0:
+            mdp_file.add_or_update("define", " ".join(["-D" + define for define in self.defines]))
+
+        for key, value in self.additional_mdp_parameters.items():
+            mdp_file.add_or_update(key, str(value))
+
+        options_txt = f" -maxwarn {self.maxwarn}"
+        if self.useRestraint:
+            options_txt += " -r input.gro"
+        if self.index_file:
+            options_txt += f" -n {self.index_file}"
+
+        return {
+            "setting.mdp": mdp_file.export(),
+            "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
+            "mdrun.sh": defaut_file_content("mdrun.sh"),
+            "generate_xtc.sh": defaut_file_content("generate_xtc.sh"),
+            "ovito.sh": defaut_file_content("ovito.sh"),
+        }
+
+
 class SolvationSCP216(Calculation):
     """
     A class to represent a solvation calculation using the SPC216 water model.
