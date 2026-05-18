@@ -1007,6 +1007,13 @@ def launch(
                 case OverwriteType.no:
                     raise ValueError("Working directory already exists", dirname)
                 case OverwriteType.full_overwrite:
+                    print("Working directory already exists. I will remove it and create a new one.", dirname)
+                    print("========================================================================")
+                    print(dirname, "will be removed. Please check the folder and run again.")
+                    is_ok = input("Type 'yes' to confirm: ")
+                    while is_ok != "yes":
+                        print("I will not remove the folder. Please check the folder and run again.")
+                        is_ok = input("Type 'yes' to confirm: ")
                     # remove the folder and its content
                     for file in os.listdir(dirname):
                         os.remove(os.path.join(dirname, file))
