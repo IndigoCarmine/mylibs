@@ -1006,6 +1006,10 @@ def launch(
         while is_ok != "yes":
             print("I will not remove the folder. Please check the folder and run again.")
             is_ok = input("Type 'yes' to confirm: ")
+        shutil.rmtree(working_dir)
+
+    os.makedirs(working_dir, exist_ok=True)
+
     for i in range(len(calculations)):
         calculation = calculations[i]
         dirname = os.path.join(working_dir, str(i) + "_" + calculation.name)
@@ -1030,10 +1034,25 @@ def launch(
             with open(os.path.join(dirname, name), "w", newline="\n") as f:
                 f.write(content)
 
-        script_content = """#!/bin/bash
+        if i == len(calculations) - 1:
+            script_content = """#!/bin/bash
 
 if [ -f "output.gro" ]; then
     echo "output.gro already exists. This calculation is finished."
+    exit 0
+fi
+
+if ls ./*.pdb >/dev/null 2>&1; then
+    echo "this calculation has problems and this is already calculated."
+    exit 1
+fi
+"""
+        else:
+            script_content = """#!/bin/bash
+
+if [ -f "output.gro" ]; then
+    echo "output.gro already exists. This calculation is finished."
+    . copy.sh
     exit 0
 fi
 
