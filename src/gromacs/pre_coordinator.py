@@ -33,7 +33,6 @@ def pre_coordinate[T: molecules.IMolecule](
         molecule.get_child(aromaticsideO).coordinate
         + molecule.get_child(aromaticothersideO).coordinate
     )
-    print(vector)
     # C=O bond(Barbiturate) vector
     vector = vector.astype(float) / np.linalg.norm(vector)
     # move from vector to x axis
@@ -50,7 +49,7 @@ def pre_coordinate[T: molecules.IMolecule](
     return molecule
 
 
-def precooredinate2[T: molecules.IMolecule](
+def precoordinate2[T: molecules.IMolecule](
     molecule: T, topO: int, aromaticsideNH: int, aromaticothersideO: int
 ) -> T:
     """
@@ -87,7 +86,6 @@ def precooredinate2[T: molecules.IMolecule](
     # move aromatic side O to xz plane
     vector = molecule.get_child(aromaticothersideO).coordinate.astype(float)
 
-    print(-np.arctan2(vector[2], -vector[1]) * 180 / np.pi)
     # move vector to xz plane
     rot = Rotation.from_euler("x", np.arctan2(vector[2], -vector[1]), degrees=False)
     # rot = Rotation.from_euler("x", np.pi, degrees=False) * rot

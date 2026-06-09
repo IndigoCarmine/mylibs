@@ -19,7 +19,7 @@ from . import mdp
 import numpy as np
 
 
-def defaut_file_content(name: str) -> str:
+def default_file_content(name: str) -> str:
     """
     Reads the content of a default file from the DefaultFiles directory.
 
@@ -107,9 +107,9 @@ class EM(Calculation):
                 .add_or_update("nsteps", self.nsteps)
                 .add_or_update("emtol", self.emtol)
                 .export(),
-                "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
-                "mdrun.sh": defaut_file_content("mdrun.sh"),
-                "ovito.sh": defaut_file_content("em_ovito.sh"),
+                "grommp.sh": default_file_content("grommp.sh").format(options=options_txt),
+                "mdrun.sh": default_file_content("mdrun.sh"),
+                "ovito.sh": default_file_content("em_ovito.sh"),
             }
         else:
             return {
@@ -118,9 +118,9 @@ class EM(Calculation):
                 .add_or_update("emtol", self.emtol)
                 .add_or_update("define", " ".join(["-D" + define for define in self.defines]))
                 .export(),
-                "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
-                "mdrun.sh": defaut_file_content("mdrun.sh"),
-                "ovito.sh": defaut_file_content("em_ovito.sh"),
+                "grommp.sh": default_file_content("grommp.sh").format(options=options_txt),
+                "mdrun.sh": default_file_content("mdrun.sh"),
+                "ovito.sh": default_file_content("em_ovito.sh"),
             }
 
 
@@ -260,10 +260,10 @@ class MD(Calculation):
 
                 return {
                     "setting.mdp": mdp_file.export(),
-                    "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
-                    "mdrun.sh": defaut_file_content("mdrun.sh"),
-                    "generate_xtc.sh": defaut_file_content("generate_xtc.sh"),
-                    "ovito.sh": defaut_file_content("ovito.sh"),
+                    "grommp.sh": default_file_content("grommp.sh").format(options=options_txt),
+                    "mdrun.sh": default_file_content("mdrun.sh"),
+                    "generate_xtc.sh": default_file_content("generate_xtc.sh"),
+                    "ovito.sh": default_file_content("ovito.sh"),
                 }
 
             case MDType.v_rescale_only_nvt:
@@ -291,14 +291,13 @@ class MD(Calculation):
 
                 return {
                     "setting.mdp": mdp_file.export(),
-                    "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
-                    "mdrun.sh": defaut_file_content("mdrun.sh"),
-                    "generate_xtc.sh": defaut_file_content("generate_xtc.sh"),
-                    "ovito.sh": defaut_file_content("ovito.sh"),
+                    "grommp.sh": default_file_content("grommp.sh").format(options=options_txt),
+                    "mdrun.sh": default_file_content("mdrun.sh"),
+                    "generate_xtc.sh": default_file_content("generate_xtc.sh"),
+                    "ovito.sh": default_file_content("ovito.sh"),
                 }
 
             case MDType.nose_hoover_parinello_rahman:
-                # raise NotImplementedError("parameters are not linked to the mdp file")
                 options_txt = " -maxwarn " + str(self.maxwarn)
                 mdp_file = (
                     mdp.MDParameters(mdp.NOSE_HOOVER_PARINELLO_RAHMAN_MDP)
@@ -311,22 +310,22 @@ class MD(Calculation):
                     .add_or_update("ref_t", self.temperature)
                     .add_or_update("gen_temp", self.temperature)
                 )
+                for key, value in self.additional_mdp_parameters.items():
+                    mdp_file.add_or_update(key, str(value))
+                if self.useRestraint:
+                    options_txt += " -r input.gro"
+                    mdp_file.add_or_update("refcoord_scaling", "all")
+                if len(self.defines) != 0:
+                    mdp_file.add_or_update("define", " ".join(["-D" + define for define in self.defines]))
                 return {
                     "setting.mdp": mdp_file.export(),
-                    "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
-                    "mdrun.sh": defaut_file_content("mdrun.sh"),
-                    "generate_xtc.sh": defaut_file_content("generate_xtc.sh"),
-                    "ovito.sh": defaut_file_content("ovito.sh"),
+                    "grommp.sh": default_file_content("grommp.sh").format(options=options_txt),
+                    "mdrun.sh": default_file_content("mdrun.sh"),
+                    "generate_xtc.sh": default_file_content("generate_xtc.sh"),
+                    "ovito.sh": default_file_content("ovito.sh"),
                 }
             case MDType.berendsen:
-                raise NotImplementedError("parameters are not linked to the mdp file")
-                return {
-                    "setting.mdp": defaut_file_content("berendsen.mdp"),
-                    "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
-                    "mdrun.sh": defaut_file_content("mdrun.sh"),
-                    "generate_xtc.sh": defaut_file_content("generate_xtc.sh"),
-                    "ovito.sh": defaut_file_content("ovito.sh"),
-                }
+                raise NotImplementedError("berendsen is not implemented")
 
 
 class RuntimeSolvation(Calculation):
@@ -394,13 +393,13 @@ class RuntimeSolvation(Calculation):
             dict[str, str]: A dictionary where keys are file names and values are file contents.
         """
         return {
-            "mdrun.sh": defaut_file_content("runtime_solvation.sh")
+            "mdrun.sh": default_file_content("runtime_solvation.sh")
             .replace("SOLVENT", self.solvent)
             .replace("RATE", str(self.rate))
             .replace("TRY", str(self.ntry)),
-            f"{self.solvent}.itp": defaut_file_content(f"{self.solvent}.itp"),
-            f"{self.solvent}.gro": defaut_file_content(f"{self.solvent}.gro"),
-            "runtime_solvation.py": defaut_file_content("runtime_solvation.py"),
+            f"{self.solvent}.itp": default_file_content(f"{self.solvent}.itp"),
+            f"{self.solvent}.gro": default_file_content(f"{self.solvent}.gro"),
+            "runtime_solvation.py": default_file_content("runtime_solvation.py"),
             "grommp.sh": 'echo "this is a dummy file for automation"',
         }
 
@@ -515,7 +514,7 @@ class Solvation(Calculation):
 
         print("I will fill the cell with", nmol, "molecules")
 
-        return cls(solvent, name=name, nmol=nmol, ntry=300)
+        return cls(solvent, calculation_name=name, nmol=nmol, ntry=300)
 
     @property
     def name(self) -> str:
@@ -529,13 +528,13 @@ class Solvation(Calculation):
             dict[str, str]: A dictionary where keys are file names and values are file contents.
         """
         return {
-            "mdrun.sh": defaut_file_content("solvation.sh")
+            "mdrun.sh": default_file_content("solvation.sh")
             .replace("SOLVENT", self.solvent)
             .replace("NMOL", str(self.nmol))
             .replace("TRY", str(self.ntry)),
-            f"{self.solvent}.itp": defaut_file_content(f"{self.solvent}.itp"),
-            f"{self.solvent}.gro": defaut_file_content(f"{self.solvent}.gro"),
-            "solvation.py": defaut_file_content("solvation.py"),
+            f"{self.solvent}.itp": default_file_content(f"{self.solvent}.itp"),
+            f"{self.solvent}.gro": default_file_content(f"{self.solvent}.gro"),
+            "solvation.py": default_file_content("solvation.py"),
             "grommp.sh": 'echo "this is a dummy file for automation"',
         }
 
@@ -566,13 +565,10 @@ class AWH(Calculation):
             warnings.warn("maxwarn is not 0. Do you know what you are doing?")
 
         if self.settingfile_abs_path is not None:
-            warnings.warn("settingfile_abs_path is not None. Default mdp file will be used.")
-            warnings.warn("This file cannot be used for almost all systems. Do you know what you are doing?")
             warnings.warn(
-                "Following is default file content. Check if it is what you want. and Set settingfile_abs_path to None if you want to use default file."
-                "And This libs will overwrite some your setting property (nsteps, nstxout, etc.) in the mdp file."
+                "settingfile_abs_path is set. The specified file will be used as base mdp. "
+                "Note that nsteps, nstxout, ref_t and other fields will be overwritten by class properties."
             )
-            warnings.warn(defaut_file_content("awh_setting.mdp"))
 
         print(
             "time span of the MD ",
@@ -593,9 +589,12 @@ class AWH(Calculation):
 
     @override
     def generate(self) -> dict[str, str]:
+        if self.settingfile_abs_path is not None:
+            base_text = mdp.MDParameters.from_file(self.settingfile_abs_path)
+        else:
+            base_text = mdp.MDParameters.from_text(default_file_content("awh_setting.mdp"))
         mdp_file = (
-            mdp.MDParameters.from_text(defaut_file_content("awh_setting.mdp"))
-            .add_or_update("nsteps", self.nsteps)
+            base_text.add_or_update("nsteps", self.nsteps)
             .add_or_update("nstxout", self.nstout)
             .add_or_update("nstvout", self.nstout)
             .add_or_update("nstfout", self.nstout)
@@ -619,10 +618,10 @@ class AWH(Calculation):
 
         return {
             "setting.mdp": mdp_file.export(),
-            "grommp.sh": defaut_file_content("grommp.sh").format(options=options_txt),
-            "mdrun.sh": defaut_file_content("mdrun.sh"),
-            "generate_xtc.sh": defaut_file_content("generate_xtc.sh"),
-            "ovito.sh": defaut_file_content("ovito.sh"),
+            "grommp.sh": default_file_content("grommp.sh").format(options=options_txt),
+            "mdrun.sh": default_file_content("mdrun.sh"),
+            "generate_xtc.sh": default_file_content("generate_xtc.sh"),
+            "ovito.sh": default_file_content("ovito.sh"),
         }
 
 
@@ -651,7 +650,7 @@ class SolvationSCP216(Calculation):
         return {
             "dummy.top": "",
             "grommp.sh": "echo 'this is a dummy file for automation'",
-            "top_mod.py": defaut_file_content("top_mod.py"),
+            "top_mod.py": default_file_content("top_mod.py"),
             "mdrun.sh": _gmx_alias
             + "\n\n\n"
             + "inner_gmx solvate -cp input.gro -cs spc216.gro -o output.gro -p dummy.top \n\n\n"
@@ -689,15 +688,15 @@ class SolvationMCH(Calculation):
         return {
             "dummy.top": "",
             "grommp.sh": "echo 'this is a dummy file for automation'",
-            "top_mod.py": defaut_file_content("top_mod.py"),
-            "add_mchitp.py": defaut_file_content("add_mchitp.py"),
+            "top_mod.py": default_file_content("top_mod.py"),
+            "add_mchitp.py": default_file_content("add_mchitp.py"),
             "mdrun.sh": _gmx_alias
             + "\n\n\n"
             + "inner_gmx solvate -cp input.gro -cs MCH_solventbox.gro -o output.gro -p dummy.top \n\n\n"
             + "python top_mod.py \n\n\n"
             + "python add_mchitp.py",
-            "MCH.itp": defaut_file_content("MCH.itp"),
-            "MCH_solventbox.gro": defaut_file_content("MCH_solventbox.gro"),
+            "MCH.itp": default_file_content("MCH.itp"),
+            "MCH_solventbox.gro": default_file_content("MCH_solventbox.gro"),
         }
 
     @property
@@ -809,7 +808,7 @@ class FileControl(Calculation):
         return cls(name, "\n".join(commands))
 
     @classmethod
-    def cell_resizeing(cls, name: str, x: float, y: float, z: float):
+    def cell_resizing(cls, name: str, x: float, y: float, z: float):
         """
         Creates a FileControl instance to resize the simulation cell.
         Args:
@@ -821,7 +820,7 @@ class FileControl(Calculation):
             FileControl: A FileControl object configured for cell resizing.
         """
         commands = []
-        commands.append("{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndn")
+        commands.append("{ echo -e '!rMCH'; echo -e 'q'; } | inner_gmx make_ndx -f input.gro -o withoutMCH.ndx")
         commands.append("echo '!MCH' | inner_gmx trjconv -f input.gro -s input.gro -o output.gro -n withoutMCH.ndx")
 
         # remove MCH from the topology file
@@ -933,6 +932,53 @@ class BarMethod(Calculation):
             raise ValueError("mass_lambdas is not same length as vdw_lambdas")
         if len(self.temperature_lambdas) != nlambdas:
             raise ValueError("temperature_lambdas is not same length as vdw_lambdas")
+
+    @property
+    def name(self) -> str:
+        return self.calculation_name
+
+    @override
+    def generate(self) -> dict[str, str]:
+        options_txt = f" -maxwarn {self.maxwarn}"
+        if self.useRestraint:
+            options_txt += " -r input.gro"
+
+        mdp_file = (
+            mdp.MDParameters.from_text(default_file_content("barmethod.mdp"))
+            .add_or_update("nsteps", self.nsteps)
+            .add_or_update("nstxout", self.nstout)
+            .add_or_update("nstvout", self.nstout)
+            .add_or_update("nstfout", self.nstout)
+            .add_or_update("nstenergy", self.nstout)
+            .add_or_update("gen_vel", self.gen_vel)
+            .add_or_update("ref_t", self.temperature)
+            .add_or_update("gen_temp", self.temperature)
+            .add_or_update("vdw_lambdas", " ".join(str(v) for v in self.vdw_lambdas))
+            .add_or_update("coul_lambdas", " ".join(str(v) for v in self.coul_lambdas))
+            .add_or_update("bonded_lambdas", " ".join(str(v) for v in self.bonded_lambdas))
+            .add_or_update("restraint_lambdas", " ".join(str(v) for v in self.restraint_lambdas))
+            .add_or_update("mass_lambdas", " ".join(str(v) for v in self.mass_lambdas))
+            .add_or_update("temperature_lambdas", " ".join(str(v) for v in self.temperature_lambdas))
+            .add_or_update("couple-moltype", self.couple_moltype)
+            .add_or_update("couple-lambda0", self.couple_lamda0)
+            .add_or_update("couple-lambda1", self.couple_lamda1)
+            .add_or_update("nstdhdl", self.nstdhdl)
+        )
+
+        if len(self.defines) != 0:
+            mdp_file.add_or_update("define", " ".join(["-D" + define for define in self.defines]))
+        if self.useRestraint:
+            mdp_file.add_or_update("refcoord_scaling", "all")
+        for key, value in self.additional_mdp_parameters.items():
+            mdp_file.add_or_update(key, str(value))
+
+        return {
+            "setting.mdp": mdp_file.export(),
+            "grommp.sh": default_file_content("grommp.sh").format(options=options_txt),
+            "mdrun.sh": default_file_content("mdrun.sh"),
+            "generate_xtc.sh": default_file_content("generate_xtc.sh"),
+            "ovito.sh": default_file_content("ovito.sh"),
+        }
 
 
 def copy_file_script(extension: str, destination: str) -> str:
@@ -1193,7 +1239,13 @@ def save_json(calculations: list[Calculation], filepath: str):
         json.dump(calculations, f, cls=CalculationJSONEncoder, indent=4)
 
 
-CALCULATION_REGISTRY = {cls.__name__: cls for cls in Calculation.__subclasses__()}
+def _all_subclasses(cls):
+    for sub in cls.__subclasses__():
+        yield sub
+        yield from _all_subclasses(sub)
+
+
+CALCULATION_REGISTRY = {cls.__name__: cls for cls in _all_subclasses(Calculation)}
 
 
 def load_json(filepath: str) -> list[Calculation]:

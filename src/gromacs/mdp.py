@@ -23,14 +23,16 @@ class MDParameters:
     It allows loading, modifying, and exporting MDP parameters.
     """
 
-    def __init__(self, data: dict[str, str|int|float] = {}, ignore_deepcopy=False):
+    def __init__(self, data: dict[str, str|int|float] | None = None, ignore_deepcopy=False):
         """
         Initializes the MDParameters object.
         Args:
             data (dict[str, str]): Initial MDP parameters as a dictionary.
             ignore_deepcopy (bool): If True, the input data dictionary is used directly without deep copying.
         """
-        if ignore_deepcopy:
+        if data is None:
+            self.data = {}
+        elif ignore_deepcopy:
             self.data = data
         else:
             self.data = copy.deepcopy(data)
@@ -81,7 +83,7 @@ class MDParameters:
             line = line.strip()
             if not line or line.startswith(";"):
                 continue
-            key, value = line.split("=")
+            key, value = line.split("=", 1)
             key = key.strip()
             value = value.strip()
             mdp.data[key] = value

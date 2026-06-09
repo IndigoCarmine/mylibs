@@ -91,7 +91,7 @@ class Recorder:
         value_name = [val for val, _ in self.values]
         for name, val in recorder.values:
             if name in value_name:
-                raise ValueError(f"Recorders have a same value:{val}")
+                raise ValueError(f"Recorders have a same value:{name}")
             else:
                 self.values.append((name, val))
 
@@ -109,7 +109,7 @@ class Recorder:
         Compares two Recorder objects for less than based on their calculation name.
         """
         if not isinstance(other, Recorder):
-            return TypeError("Cannot compare with Recorder and {}".format(type(other)))
+            raise TypeError("Cannot compare with Recorder and {}".format(type(other)))
 
         return self.calc_name < other.calc_name
 
@@ -126,6 +126,8 @@ def generate_excel(file_name: str, recoders: list[Recorder]):
     # for recoder in recoders:
     #     for val in recoder:
     #         all.add(val)
+    if not recoders:
+        raise ValueError("recoders is empty")
     all = [name for name, _ in recoders[0].values]
     # all = ["name"] + all
     data = pd.DataFrame()
@@ -160,7 +162,7 @@ def mixing_recorders(
     return new_recorders
 
 
-def perocess_files(
+def process_files(
     calculation_basedir: str,
     last_calc,
     work: Callable[[str], Recorder | None],
@@ -224,7 +226,7 @@ def _analyze_trj_inner(
         cui_utils.warning(f"{grofile} does not exist")
         return None
     u = mda.Universe(grofile)
-    if xtcfile is not None:
+    if os.path.exists(xtcfile):
         u.load_new(xtcfile)
     return work(u, path)
 
@@ -237,7 +239,7 @@ def analyze_trj(
 ) -> list[Recorder]:
     """
     Analyzes GROMACS trajectory files across multiple calculation directories.
-    It uses `perocess_files` internally to handle parallel processing.
+    It uses `process_files` internally to handle parallel processing.
     Args:
         calculation_basedir (str): The base directory containing calculation folders.
         last_calc: The name of the last calculation subdirectory (e.g., "4_md_main").
@@ -246,7 +248,7 @@ def analyze_trj(
     Returns:
         list[Recorder]: A list of Recorder objects with analysis results.
     """
-    return perocess_files(
+    return process_files(
         calculation_basedir,
         last_calc,
         partial(_analyze_trj_inner, work=work),
