@@ -670,13 +670,15 @@ class SolvationMCH(Calculation):
         name (str): The name of the calculation.
     """
 
-    def __init__(self, calculation_name: str = "solvation"):
+    def __init__(self, calculation_name: str = "solvation", scale: float = 0.57):
         """
         Initializes the SolvationMCH object.
         Args:
             calculation_name (str): The name of the calculation.
+            scale (float): The radius scaling factor. it will be used in gmx solvatte -scale option. See reference manual.
         """
         self.calculation_name = calculation_name
+        self.scale = scale
 
     @override
     def generate(self) -> dict[str, str]:
@@ -692,7 +694,7 @@ class SolvationMCH(Calculation):
             "add_mchitp.py": default_file_content("add_mchitp.py"),
             "mdrun.sh": _gmx_alias
             + "\n\n\n"
-            + "inner_gmx solvate -cp input.gro -cs MCH_solventbox.gro -o output.gro -p dummy.top \n\n\n"
+            + f"inner_gmx solvate -cp input.gro -cs MCH_solventbox.gro -o output.gro -p dummy.top -scale {self.scale} \n\n\n"
             + "python top_mod.py \n\n\n"
             + "python add_mchitp.py",
             "MCH.itp": default_file_content("MCH.itp"),

@@ -6,7 +6,7 @@ from typing import override
 import numpy as np
 from dataclasses import dataclass, field
 
-from pydantic import dataclasses
+from pydantic import dataclasses, json
 
 def defaut_file_content(name: str) -> str: ...
 
@@ -143,7 +143,7 @@ class SolvationMCH(Calculation):
         name (str): The name of the calculation.
     """
 
-    def __init__(self, calculation_name: str = "solvation"): ...
+    def __init__(self, calculation_name: str = "solvation", scale: float = 0.57): ...
     @override
     def generate(self) -> dict[str, str]: ...
     @property
@@ -241,3 +241,8 @@ def generate_stepbystep_runfile(
     calculation_name_and_isparaleljob: list[tuple[str, bool]],
     calc_path: str,
 ): ...
+
+class CalculationJSONEncoder(json.JSONEncoder):
+    def default(self, o): ...
+
+def save_json(calculations: list[Calculation], filepath: str): ...
