@@ -13,14 +13,11 @@ def generate_inermolecular_interactions(
     outfile_path: str = "intermolecular_bond.itp",
 ) -> list[tuple[int, int]]:
     grobalbond = []
+    natoms_in_rosette = natoms * nmols_in_rosette
     # generate global bond list
     for i in range(nmols):
         for b in bonds:
-            if (i + 1) % nmols_in_rosette == 0:
-                # ring closure
-                grobalbond.append((b[0] + i * natoms, b[1] + (i - nmols_in_rosette) * natoms))
-            else:
-                grobalbond.append((b[0] + i * natoms, b[1] + i * natoms))
+            grobalbond.append(((b[0] + i * natoms) % natoms_in_rosette, (b[1] + i * natoms) % natoms_in_rosette))
 
     #   135   286     1     0.3   5000
     with open(outfile_path, "w", newline="\n") as f:
