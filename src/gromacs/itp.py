@@ -16,8 +16,17 @@ def generate_inermolecular_interactions(
     natoms_in_rosette = natoms * nmols_in_rosette
     # generate global bond list
     for i in range(nmols):
+        # which rosette molecule i belongs to, and its position within that rosette
+        rosette_base = (i // nmols_in_rosette) * natoms_in_rosette
+        pos_in_rosette = (i % nmols_in_rosette) * natoms
         for b in bonds:
-            grobalbond.append(((b[0] + i * natoms) % natoms_in_rosette, (b[1] + i * natoms) % natoms_in_rosette))
+            # wrap each bond within its own rosette (ring closure), then shift to that rosette
+            grobalbond.append(
+                (
+                    rosette_base + (b[0] + pos_in_rosette) % natoms_in_rosette,
+                    rosette_base + (b[1] + pos_in_rosette) % natoms_in_rosette,
+                )
+            )
 
     #   135   286     1     0.3   5000
     with open(outfile_path, "w", newline="\n") as f:

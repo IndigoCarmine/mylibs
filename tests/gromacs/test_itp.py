@@ -41,5 +41,31 @@ class TestItp(unittest.TestCase):
 
         os.remove(outfile_path)
 
+    def test_generate_inermolecular_interactions_multiple_rosettes(self):
+        """
+        Bonds in the second rosette must reference that rosette's own atoms,
+        not collapse back onto the first rosette.
+        """
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmpfile:
+            outfile_path = tmpfile.name
+
+        bonds = generate_inermolecular_interactions(
+            natoms=10,
+            nmols=12,
+            bonds=[(1, 10)],
+            nmols_in_rosette=6,
+            outfile_path=outfile_path,
+        )
+
+        expected_bonds = [
+            # rosette 0 (molecules 0-5), with ring closure on the last molecule
+            (1, 10), (11, 20), (21, 30), (31, 40), (41, 50), (51, 0),
+            # rosette 1 (molecules 6-11), offset to its own atoms (61-120)
+            (61, 70), (71, 80), (81, 90), (91, 100), (101, 110), (111, 60),
+        ]
+        self.assertEqual(bonds, expected_bonds)
+
+        os.remove(outfile_path)
+
 if __name__ == '__main__':
     unittest.main()

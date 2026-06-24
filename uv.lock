@@ -1481,7 +1481,7 @@ wheels = [
 
 [[package]]
 name = "yagaig-libs"
-version = "0.2.18"
+version = "0.2.19"
 source = { virtual = "." }
 dependencies = [
     { name = "annotated-types" },
