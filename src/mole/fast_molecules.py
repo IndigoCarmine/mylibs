@@ -10,8 +10,8 @@ import numpy as np
 from scipy.spatial import distance_matrix
 from scipy.spatial.transform import Rotation
 
-import mole.molecules as mol
-import base_utils.cui_utils as cui
+import src.mole.molecules as mol
+import src.base_utils.cui_utils as cui
 
 
 class FastStructWapper[A: mol.AtomBase]():

@@ -10,7 +10,7 @@ import os
 from typing import Callable, Iterator, Protocol
 import MDAnalysis as mda
 from functools import partial, total_ordering
-from base_utils import cui_utils
+from src.base_utils import cui_utils
 import numpy as np
 import numpy.typing as npt
 import pandas as pd

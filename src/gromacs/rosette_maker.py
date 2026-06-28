@@ -5,7 +5,7 @@ specifically rosette and oligorosette structures, from individual molecular mono
 import copy
 
 import numpy as np
-import mole.molecules as molecules
+import src.mole.molecules as molecules
 from scipy.spatial.transform import Rotation
 
 

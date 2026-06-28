@@ -6,7 +6,7 @@ from src.mole.xyz import XyzMolecule, XyzAtom
 from src.gromacs.pre_coordinator import (
     get_substructure_match,
     pre_coordinate,
-    precooredinate2,
+    precoordinate2,
 )
 
 
@@ -65,7 +65,7 @@ class TestPreCoordinator(unittest.TestCase):
         molecule = XyzMolecule("test", 1, [c1, n1, o1])
 
         # Pre-coordinate the molecule
-        precooredinate2(molecule, 0, 1, 2)
+        precoordinate2(molecule, 0, 1, 2)
 
         # Assert that the top atom is at the origin
         np.testing.assert_array_almost_equal(
