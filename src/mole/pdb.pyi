@@ -4,7 +4,7 @@ from typing import Optional, override
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from mole.molecules import AtomBase, IMolecule
+from src.mole.molecules import AtomBase, IMolecule
 
 
 @dataclass

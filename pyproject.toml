@@ -40,6 +40,12 @@ dev = ["build", "twine", "mypy"]
 [tool.uv.sources]
 ref-for-llm = { git = "https://github.com/IndigoCarmine/ref_for_llm.git" }
 
+[tool.mypy]
+# MDAnalysis ships no type stubs; don't fail type-checking on its imports.
+[[tool.mypy.overrides]]
+module = ["MDAnalysis", "MDAnalysis.*"]
+ignore_missing_imports = true
+
 [dependency-groups]
 dev = [
     "mypy>=2.1.0",

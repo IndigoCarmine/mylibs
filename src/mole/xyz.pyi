@@ -4,9 +4,9 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from mole.molecules import AtomBase as AtomBase
-from mole.molecules import IMolecule as IMolecule
-from mole.molecules import Substructure as Substructure
+from src.mole.molecules import AtomBase as AtomBase
+from src.mole.molecules import IMolecule as IMolecule
+from src.mole.molecules import Substructure as Substructure
 
 gaussian_param_default: str
 

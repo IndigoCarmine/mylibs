@@ -9,7 +9,7 @@ from typing import override
 from scipy.spatial.transform import Rotation
 import numpy as np
 
-from mole.molecules import AtomBase, IMolecule
+from src.mole.molecules import AtomBase, IMolecule
 
 
 class GroAtom(AtomBase):
