@@ -163,6 +163,71 @@ EM_MDP:dict[str, str|int|float] = {
     "rvdw": "1",
     "pbc": "xyz",
 }
+
+# --- Martini 3 (coarse-grained) MDP templates ---------------------------------
+# Values follow the official Martini 3 "new-RF" recommendation
+# (de Jong et al. 2016; Martini 3, Souza et al. Nat. Methods 2021):
+#   Verlet scheme, reaction-field electrostatics with epsilon_rf=0 (conductor)
+#   and epsilon_r=15, potential-shift-Verlet vdw, rvdw=rcoulomb=1.1 nm.
+# Placeholder tokens ("nsteps", "ref_t", ...) mirror the atomistic templates so
+# calculation.MartiniMD/MartiniEM can fill them via MDParameters.add_or_update().
+MARTINI_MIN_MDP: dict[str, str | int | float] = {
+    "integrator": "steep",
+    "nsteps": "nsteps",
+    "emtol": "emtol",
+    "emstep": "0.01",
+    "cutoff-scheme": "Verlet",
+    "nstlist": "10",
+    "verlet-buffer-tolerance": "0.005",
+    "coulombtype": "reaction-field",
+    "rcoulomb": "1.1",
+    "epsilon_r": "15",
+    "epsilon_rf": "0",
+    "vdw-type": "cutoff",
+    "vdw-modifier": "Potential-shift-verlet",
+    "rvdw": "1.1",
+    "pbc": "xyz",
+}
+
+MARTINI_MD_MDP: dict[str, str | int | float] = {
+    "integrator": "md",
+    "dt": "0.02",
+    "nsteps": "nsteps",
+    "nstxout": "nstxout",
+    "nstvout": "nstvout",
+    "nstfout": "nstfout",
+    "nstlog": "nstenergy",
+    "nstenergy": "nstenergy",
+    "nstxout-compressed": "nstxout",
+    "compressed-x-precision": "1000",
+    "cutoff-scheme": "Verlet",
+    "nstlist": "20",
+    "verlet-buffer-tolerance": "0.005",
+    "ns_type": "grid",
+    "coulombtype": "reaction-field",
+    "rcoulomb": "1.1",
+    "epsilon_r": "15",
+    "epsilon_rf": "0",
+    "vdw-type": "cutoff",
+    "vdw-modifier": "Potential-shift-verlet",
+    "rvdw": "1.1",
+    "tcoupl": "v-rescale",
+    "tc_grps": "system",
+    "tau_t": "1.0",
+    "ref_t": "ref_t",
+    "Pcoupl": "c-rescale",
+    "Pcoupltype": "isotropic",
+    "tau_p": "12.0",
+    "compressibility": "3e-4",
+    "ref_p": "1.0",
+    "gen_vel": "gen_vel",
+    "gen_temp": "gen_temp",
+    "constraints": "none",
+    "constraint_algorithm": "Lincs",
+    "pbc": "xyz",
+    "refcoord_scaling": "all",
+}
+
 V_RESCALE_C_RESCALE_MDP:dict[str, str|int|float] = {
     "integrator": "md",
     "dt": "0.002",

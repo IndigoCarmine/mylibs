@@ -328,6 +328,143 @@ class MD(Calculation):
                 raise NotImplementedError("berendsen is not implemented")
 
 
+@dataclass(kw_only=True)
+class MartiniEM(Calculation):
+    """
+    Energy minimization for a Martini 3 coarse-grained system.
+
+    Mirrors ``EM`` but pulls the ``mdp.MARTINI_MIN_MDP`` template (Verlet,
+    reaction-field, potential-shift vdw) instead of the atomistic one. Plugs into
+    ``launch()`` exactly like the other Calculation subclasses.
+    """
+
+    nsteps: int = 5000
+    emtol: float = 100.0
+    calculation_name: str = "em"
+    defines: list[str] = dataclasses.field(default_factory=list)
+    maxwarn: int = 10  # CG runs routinely emit benign grompp notes
+    useRestraint: bool = False
+
+    @property
+    def name(self) -> str:
+        return self.calculation_name
+
+    @override
+    def generate(self) -> dict[str, str]:
+        options_txt = " -maxwarn " + str(self.maxwarn)
+        if self.useRestraint:
+            options_txt += " -r input.gro"
+        mdp_file = (
+            mdp.MDParameters(mdp.MARTINI_MIN_MDP)
+            .add_or_update("nsteps", self.nsteps)
+            .add_or_update("emtol", self.emtol)
+        )
+        if len(self.defines) != 0:
+            mdp_file.add_or_update("define", " ".join(["-D" + d for d in self.defines]))
+        return {
+            "setting.mdp": mdp_file.export(),
+            "grommp.sh": default_file_content("grommp.sh").format(options=options_txt),
+            # CG boxes are small; a single domain avoids DD "box smaller than
+            # 2*cell" errors. OpenMP still parallelizes across all cores.
+            "mdrun.sh": _single_domain_mdrun(default_file_content("mdrun.sh")),
+            "ovito.sh": default_file_content("em_ovito.sh"),
+        }
+
+
+def _single_domain_mdrun(mdrun_sh: str) -> str:
+    """Force a single MPI/thread-MPI rank (``-ntmpi 1``) in an mdrun script.
+
+    Coarse-grained boxes are small enough that GROMACS' domain decomposition can
+    fail (box edge < 2 * minimum cell size); running one domain sidesteps it while
+    OpenMP still uses every core.
+    """
+    return mdrun_sh.replace("inner_gmx mdrun", "inner_gmx mdrun -ntmpi 1")
+
+
+@dataclass(kw_only=True)
+class MartiniMD(Calculation):
+    """
+    Molecular dynamics for a Martini 3 coarse-grained system (NPT by default).
+
+    Mirrors ``MD`` (v-rescale / c-rescale ensemble) but uses ``mdp.MARTINI_MD_MDP``
+    with the CG time step (dt = 0.02 ps). ``useSemiisotropic`` switches to
+    semiisotropic pressure coupling (e.g. for membranes/interfaces).
+    """
+
+    calculation_name: str
+    nsteps: int = 500000
+    nstout: int = 5000
+    gen_vel: str = "yes"
+    temperature: float = 300
+    dt: float = 0.02
+    defines: list[str] = dataclasses.field(default_factory=list)
+    maxwarn: int = 10
+    useRestraint: bool = False
+    useSemiisotropic: bool = False
+    additional_mdp_parameters: dict[str, str | float] = dataclasses.field(default_factory=dict)
+
+    def __post_init__(self):
+        span_ps = self.nsteps * self.dt
+        print(
+            "time span of the Martini MD",
+            self.calculation_name,
+            "is",
+            span_ps,
+            "ps or",
+            span_ps / 1000,
+            "ns. This calculation will generate",
+            self.nsteps // self.nstout,
+            "frames.",
+        )
+        if self.gen_vel not in ["yes", "no"]:
+            raise ValueError("Invalid gen_vel value")
+        if self.temperature < 0:
+            raise ValueError("Invalid temperature value")
+
+    @property
+    def name(self) -> str:
+        return self.calculation_name
+
+    @override
+    def generate(self) -> dict[str, str]:
+        options_txt = " -maxwarn " + str(self.maxwarn)
+        mdp_file = (
+            mdp.MDParameters(mdp.MARTINI_MD_MDP)
+            .add_or_update("dt", self.dt)
+            .add_or_update("nsteps", self.nsteps)
+            .add_or_update("nstxout", self.nstout)
+            .add_or_update("nstvout", self.nstout)
+            .add_or_update("nstfout", self.nstout)
+            .add_or_update("nstenergy", self.nstout)
+            .add_or_update("nstlog", self.nstout)
+            .add_or_update("nstxout-compressed", self.nstout)
+            .add_or_update("gen_vel", self.gen_vel)
+            .add_or_update("ref_t", self.temperature)
+            .add_or_update("gen_temp", self.temperature)
+        )
+        for key, value in self.additional_mdp_parameters.items():
+            mdp_file.add_or_update(key, str(value))
+        if self.useRestraint:
+            options_txt += " -r input.gro"
+            mdp_file.add_or_update("refcoord_scaling", "all")
+        if len(self.defines) != 0:
+            mdp_file.add_or_update("define", " ".join(["-D" + d for d in self.defines]))
+        if self.useSemiisotropic:
+            mdp_file.add_or_update("Pcoupltype", "semiisotropic")
+            mdp_file.add_or_update("ref_p", " ".join([str(mdp_file.get("ref_p")) for _ in range(2)]))
+            mdp_file.add_or_update(
+                "compressibility",
+                " ".join([str(mdp_file.get("compressibility")) for _ in range(2)]),
+            )
+        return {
+            "setting.mdp": mdp_file.export(),
+            "grommp.sh": default_file_content("grommp.sh").format(options=options_txt),
+            "mdrun.sh": _single_domain_mdrun(default_file_content("mdrun.sh")),
+            "generate_xtc.sh": default_file_content("generate_xtc.sh"),
+            "ovito.sh": default_file_content("ovito.sh"),
+        }
+
+
 class RuntimeSolvation(Calculation):
     """
     A class to represent a runtime solvation calculation.
