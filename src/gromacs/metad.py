@@ -1,24 +1,44 @@
 """PLUMED (well-tempered) metadynamics calculation files, in the mylibs
-Calculation style.
+Calculation style, plus PLUMED post-processing helpers.
 
-`MetaD` generates a standard NPT `setting.mdp`, a `mdrun.sh` that adds
-``-plumed plumed.dat``, the usual `grommp.sh`, and writes the supplied
-`plumed.dat`. `build_twist_plumed()` writes a PLUMED input that biases the
-inter-rosette rotation (twist) between two adjacent rosettes via a TORSION of
-CENTER virtual atoms, with a well-tempered METAD bias.
+Calculation steps:
+  * `MetaD` — a from-scratch NPT production step: standard `setting.mdp`, a
+    `mdrun.sh` that adds ``-plumed plumed.dat``, the usual `grommp.sh`, and the
+    supplied `plumed.dat`.
+  * `MDWithPlumed` — the thin alternative: an ordinary `gromacs.calculation.MD`
+    step (so it inherits every ensemble / define / semiisotropic option) with a
+    `plumed.dat` (and any extra files) dropped alongside. Use this when the run
+    is "a normal MD, but biased".
+
+`build_twist_plumed()` writes a PLUMED input that biases the inter-rosette
+rotation (twist) between two adjacent rosettes via a TORSION of CENTER virtual
+atoms, with a well-tempered METAD bias.
+
+Analysis helpers (`sum_hills`, `load_fes`, `fold_fes_to_period`) turn a finished
+run's ``HILLS`` into a free-energy curve F(CV), optionally folded into one period
+of a symmetric CV by Boltzmann-averaging the equivalent branches.
 
 GROMACS must be PLUMED-patched (`gmx mdrun -plumed`); check with
-`gmx --version | grep -i plumed`.
+`gmx --version | grep -i plumed`. The analysis helpers shell out to the
+``plumed`` binary.
 """
 
 from __future__ import annotations
 
 import dataclasses
+import os
+import subprocess
+from pathlib import Path
+
+import numpy as np
 from pydantic.dataclasses import dataclass
 from typing import override
 
 from . import mdp
-from .calculation import Calculation, default_file_content
+from .calculation import MD, Calculation, default_file_content
+
+#: Boltzmann constant in kJ/mol/K (GROMACS/PLUMED energy units).
+KB_KJ_PER_MOL_K = 0.0083144626181532
 
 
 def _mdrun_plumed_sh(plumed_file: str = "plumed.dat") -> str:
@@ -92,6 +112,48 @@ class MetaD(Calculation):
         }
 
 
+@dataclass(kw_only=True)
+class MDWithPlumed(MD):
+    """An ordinary ``MD`` step run under PLUMED (metadynamics / steered MD / any
+    bias), reusing every ``MD`` option (ensemble ``type``, ``defines``,
+    ``useSemiisotropic``, restraints, extra mdp parameters, ...).
+
+    It reuses ``MD.generate()`` verbatim and only drops the PLUMED input beside
+    the mdp: the shared ``DefaultFiles/mdrun.sh`` template auto-detects a
+    ``plumed.dat`` in the run directory and adds ``-plumed plumed.dat`` itself
+    (and skips ``-update gpu``, which PLUMED forbids), so there is no mdrun.sh
+    surgery to do — one code path with every other stage.
+
+    Supply the bias exactly one of two ways:
+      * ``plumed_content`` — the full text of plumed.dat (e.g. from
+        :func:`build_twist_plumed`), or
+      * ``plumed_file`` — a path to read it from at generate() time.
+    ``additional_files`` are copied in verbatim (basename preserved), for e.g. a
+    reference structure an RMSD/RESTRAINT CV needs.
+    """
+
+    plumed_content: str | None = None
+    plumed_file: str | None = None
+    additional_files: list[str] = dataclasses.field(default_factory=list)
+
+    @override
+    def generate(self) -> dict[str, str]:
+        if (self.plumed_content is None) == (self.plumed_file is None):
+            raise ValueError(
+                "Provide exactly one of plumed_content or plumed_file")
+        files = super().generate()
+        if self.plumed_content is not None:
+            files["plumed.dat"] = self.plumed_content
+        else:
+            assert self.plumed_file is not None
+            with open(self.plumed_file, "r") as f:
+                files["plumed.dat"] = f.read()
+        for path in self.additional_files:
+            with open(path, "r") as f:
+                files[os.path.basename(path)] = f.read()
+        return files
+
+
 def _atomlist(indices_1based) -> str:
     """PLUMED atom selection string, compressed to a,b,c or ranges a-b."""
     idx = sorted(int(i) for i in indices_1based)
@@ -154,3 +216,87 @@ METAD ...
 
 PRINT ARG=twist,mtd.bias,mtd.rbias STRIDE={stride} FILE=COLVAR
 """
+
+
+# ===========================================================================
+# Post-processing: HILLS -> free-energy curve
+# ===========================================================================
+
+def sum_hills(
+    hills: str | os.PathLike,
+    outfile: str | os.PathLike,
+    *,
+    cv_min: str | float = "-pi",
+    cv_max: str | float = "pi",
+    bins: int = 360,
+    mintozero: bool = True,
+    stride: int | None = None,
+    plumed: str = "plumed",
+) -> Path:
+    """Integrate a metadynamics ``HILLS`` file into a FES with ``plumed sum_hills``.
+
+    hills / outfile : input HILLS and output FES paths. ``cv_min``/``cv_max`` may
+    be numbers or PLUMED expressions like ``"-pi"``. ``stride`` (in Gaussians)
+    additionally dumps intermediate FES snapshots for a convergence check.
+    Returns the ``outfile`` Path. Requires the ``plumed`` binary on PATH.
+    """
+    hills = Path(hills)
+    if not hills.exists():
+        raise FileNotFoundError(
+            f"{hills} not found - has the metadynamics run finished?")
+    outfile = Path(outfile)
+    outfile.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [plumed, "sum_hills", "--hills", str(hills),
+           "--outfile", str(outfile),
+           "--min", str(cv_min), "--max", str(cv_max), "--bin", str(bins)]
+    if mintozero:
+        cmd.append("--mintozero")
+    if stride:
+        cmd += ["--stride", str(stride)]
+    subprocess.run(cmd, check=True, capture_output=True, text=True)
+    return outfile
+
+
+def load_fes(path: str | os.PathLike) -> tuple[np.ndarray, np.ndarray]:
+    """Load a PLUMED 1-D FES file; return ``(cv, free_energy)`` as two arrays
+    (columns 0 and 1, comment lines skipped)."""
+    d = np.loadtxt(path, comments="#")
+    return d[:, 0], d[:, 1]
+
+
+def fold_fes_to_period(
+    cv: np.ndarray,
+    fes: np.ndarray,
+    period: float,
+    *,
+    nbins: int = 60,
+    temperature: float = 300.0,
+    cv_in_radians: bool = True,
+    fold_in_degrees: bool = True,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Fold a free-energy curve of a symmetric CV into a single period.
+
+    The ``k`` physically equivalent branches of a periodic CV are combined by a
+    Boltzmann average, ``F_fold = -kT ln <exp(-F/kT)>_branches``, then shifted so
+    the minimum is zero. Typical use: an inter-rosette twist with 6-fold symmetry
+    → ``period=60`` degrees.
+
+    cv : the CV values from :func:`load_fes` (radians if ``cv_in_radians``, else
+        already in the folding unit). ``period`` and the returned bin centers are
+        in degrees when ``fold_in_degrees`` (the default), otherwise in the CV's
+        own unit. Returns ``(bin_centers, folded_free_energy)``; empty bins are
+        NaN.
+    """
+    kt = KB_KJ_PER_MOL_K * temperature
+    x = np.degrees(cv) if (cv_in_radians and fold_in_degrees) else np.asarray(cv)
+    x = np.mod(x, period)
+    edges = np.linspace(0.0, period, nbins + 1)
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    weights = np.exp(-fes / kt)
+    idx = np.clip(np.digitize(x, edges) - 1, 0, nbins - 1)
+    wsum = np.zeros(nbins)
+    np.add.at(wsum, idx, weights)
+    wsum[wsum == 0] = np.nan
+    f_fold = -kt * np.log(wsum)
+    f_fold -= np.nanmin(f_fold)
+    return centers, f_fold
