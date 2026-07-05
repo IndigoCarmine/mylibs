@@ -18,21 +18,25 @@ from pydantic.dataclasses import dataclass
 from typing import override
 
 from . import mdp
-from .calculation import Calculation, default_file_content, _gmx_alias
+from .calculation import Calculation, default_file_content
 
 
 def _mdrun_plumed_sh(plumed_file: str = "plumed.dat") -> str:
-    return (
-        "#!/bin/bash\n"
-        + _gmx_alias
-        + "if [ -f \"output.cpt\" ]; then\n"
-        + f"    inner_gmx mdrun -deffnm output -plumed {plumed_file} -v "
-        "-cpi output.cpt | tee run.out\n"
-        + "else\n"
-        + f"    inner_gmx mdrun -deffnm output -plumed {plumed_file} -v "
-        "| tee run.out\n"
-        + "fi\n"
-    )
+    """mdrun.sh for a PLUMED run.
+
+    The shared ``DefaultFiles/mdrun.sh`` template already runs on the GPU by
+    default (with automatic CPU fallback) and auto-detects a ``plumed.dat`` in
+    the run directory, adding ``-plumed plumed.dat`` and skipping ``-update gpu``
+    (which PLUMED does not support). So for the standard ``plumed.dat`` name this
+    just returns that template — one code path for every stage. A non-standard
+    file name still gets an explicit ``-plumed`` line appended.
+    """
+    template = default_file_content("mdrun.sh")
+    if plumed_file == "plumed.dat":
+        return template
+    # Non-standard plumed file name: the template only auto-detects "plumed.dat",
+    # so pass the file through GMX_MDRUN_EXTRA instead.
+    return f'export GMX_MDRUN_EXTRA="-plumed {plumed_file} ${{GMX_MDRUN_EXTRA:-}}"\n' + template
 
 
 @dataclass(kw_only=True)
