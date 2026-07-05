@@ -188,13 +188,13 @@ def _center(atoms_by_name: dict[str, gro.GroAtom], spec,
         masses.append(_atom_mass(atom))
     if not coords:
         raise ValueError(f"no atoms found for spec {spec!r}")
-    coords = np.array(coords)
+    coords_arr = np.array(coords)
     if mode == "com":
         wm = np.array(weights) * np.array(masses)
-        return (coords * wm[:, None]).sum(axis=0) / wm.sum()
+        return (coords_arr * wm[:, None]).sum(axis=0) / wm.sum()
     elif mode == "cog":
-        w = np.array(weights)
-        return (coords * w[:, None]).sum(axis=0) / w.sum()
+        wg = np.array(weights)
+        return (coords_arr * wg[:, None]).sum(axis=0) / wg.sum()
     raise ValueError(f"unknown map_mode {mode!r} (use 'cog' or 'com')")
 
 

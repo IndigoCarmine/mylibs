@@ -46,6 +46,12 @@ ref-for-llm = { git = "https://github.com/IndigoCarmine/ref_for_llm.git" }
 module = ["MDAnalysis", "MDAnalysis.*"]
 ignore_missing_imports = true
 
+# martini.py imports the sibling `mole` package via a runtime sys.path insert
+# (it is otherwise reachable only as src.mole.*), which mypy cannot resolve.
+[[tool.mypy.overrides]]
+module = ["mole", "mole.*"]
+ignore_missing_imports = true
+
 [dependency-groups]
 dev = [
     "mypy>=2.1.0",
