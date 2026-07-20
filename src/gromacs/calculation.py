@@ -377,7 +377,14 @@ def _single_domain_mdrun(mdrun_sh: str) -> str:
     Coarse-grained boxes are small enough that GROMACS' domain decomposition can
     fail (box edge < 2 * minimum cell size); running one domain sidesteps it while
     OpenMP still uses every core.
+
+    The default ``mdrun.sh`` template already runs single-domain (its ``NTMPI``
+    defaults to ``-ntmpi 1``), so this is a no-op there; it stays for any custom
+    script that does not. Guarding on ``-ntmpi 1`` also avoids injecting a second,
+    conflicting flag into the template's GPU/CPU commands.
     """
+    if "-ntmpi 1" in mdrun_sh:
+        return mdrun_sh
     return mdrun_sh.replace("inner_gmx mdrun", "inner_gmx mdrun -ntmpi 1")
 
 
