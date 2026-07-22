@@ -28,6 +28,7 @@ dependencies = [
     "rdkit",
     "pandas-stubs",
     "scipy-stubs",
+    "openmm>=8.5.2",
 ]
 
 
