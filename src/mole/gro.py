@@ -3,6 +3,7 @@ This module provides classes for parsing, manipulating, and generating GROMACS G
 It includes functionalities for representing atoms and molecules in the GRO format,
 and converting between GRO and XYZ file formats.
 """
+
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import override
@@ -17,6 +18,7 @@ class GroAtom(AtomBase):
     Represents an atom in a GROMACS GRO file.
     Inherits from AtomBase and adds GRO-specific properties like residue name and number.
     """
+
     atom_name: str
     residue_name: str
     residue_number: int
@@ -62,7 +64,7 @@ class GroAtom(AtomBase):
         (i5,2a5,i5,3f8.3,3f8.4)
         """
         # (i5,2a5,i5,3f8.3,3f8.4)
-        return f"{self.residue_number:>5}{self.residue_name:<5}{self.atom_name:>5}{self.index:>5}{self.coordinate[0]:>8.3f}{self.coordinate[1]:>8.3f}{self.coordinate[2]:>8.3f}"
+        return f"{self.residue_number:>5}{self.residue_name:<5}{self.atom_name:>5}{(self.index) % 100000:>5}{self.coordinate[0]:>8.3f}{self.coordinate[1]:>8.3f}{self.coordinate[2]:>8.3f}"
 
     # factory method to create GroAtom object from a line in a gro file
     @classmethod
@@ -81,9 +83,7 @@ class GroAtom(AtomBase):
         x = float(line[20:28])
         y = float(line[28:36])
         z = float(line[36:44])
-        return cls(
-            atom_number, atom_name, residue_name, residue_number, np.array([x, y, z])
-        )
+        return cls(atom_number, atom_name, residue_name, residue_number, np.array([x, y, z]))
 
     def __deepcopy__(self, memo) -> "GroAtom":
         """
@@ -104,6 +104,7 @@ class GroFile(IMolecule[GroAtom]):
     Represents a GROMACS GRO file, containing molecular structure and box information.
     Implements the IMolecule interface for common molecular operations.
     """
+
     title: str
     atoms: list[GroAtom]
     box_x: float
@@ -218,6 +219,7 @@ class GroFile(IMolecule[GroAtom]):
         Returns:
             list[str]: A list of strings representing the XYZ file content.
         """
+
         def format_float(f: float) -> str:
             return f"{f:12.6f}"
 
@@ -226,13 +228,11 @@ class GroFile(IMolecule[GroAtom]):
         xyz.append(f"{len(self.atoms)}")
         xyz.append(self.title)
         for atom in self.atoms:
-            xyz.append(
-                f"{atom.atom_symbol} {
+            xyz.append(f"{atom.atom_symbol} {
                     format_float(atom.coordinate[0] * NM_TO_ANGSTROM)
                 } {format_float(atom.coordinate[1] * NM_TO_ANGSTROM)} {
                     format_float(atom.coordinate[2] * NM_TO_ANGSTROM)
-                }"
-            )
+                }")
         return xyz
 
     def save_xyz(self, file_path: str):
@@ -244,7 +244,7 @@ class GroFile(IMolecule[GroAtom]):
         with open(file_path, "w") as f:
             f.write("\n".join(self.generate_xyz_text()))
 
-    def load_xyz_text(self, data: list[str], multiple_molecules:bool=False):
+    def load_xyz_text(self, data: list[str], multiple_molecules: bool = False):
         """
         Loads coordinate data from a list of strings representing an XYZ file.
         Args:
@@ -259,22 +259,14 @@ class GroFile(IMolecule[GroAtom]):
 
         if not multiple_molecules:
             if atomnum != len(self.atoms):
-                raise ValueError(
-                    "number of atoms in gro file and xyz file are not equal"
-                )
+                raise ValueError("number of atoms in gro file and xyz file are not equal")
 
             for i in range(atomnum):
                 line = data[i + 2].split()
-                self.atoms[i].coordinate = (
-                    np.array([float(line[1]), float(line[2]), float(line[3])])
-                    * ANGSTROM_TO_NM
-                )
+                self.atoms[i].coordinate = np.array([float(line[1]), float(line[2]), float(line[3])]) * ANGSTROM_TO_NM
         else:
             if atomnum % len(self.atoms) != 0:
-                raise ValueError(
-                    "number of atoms in xyz file is "
-                    "not multiple of number of atoms in gro file"
-                )
+                raise ValueError("number of atoms in xyz file is " "not multiple of number of atoms in gro file")
             molnum = atomnum // len(self.atoms)
             atoms: list[GroAtom] = []
             for n in range(molnum):
@@ -282,10 +274,7 @@ class GroFile(IMolecule[GroAtom]):
                     line = data[n * len(self.atoms) + i + 2].split()
                     atom = deepcopy(self.atoms[i])
                     atom.index = atom.index + n * len(self.atoms)
-                    atom.coordinate = (
-                        np.array([float(line[1]), float(line[2]), float(line[3])])
-                        * ANGSTROM_TO_NM
-                    )
+                    atom.coordinate = np.array([float(line[1]), float(line[2]), float(line[3])]) * ANGSTROM_TO_NM
                     atoms.append(atom)
 
             self.atoms = atoms
@@ -361,12 +350,9 @@ class GroFile(IMolecule[GroAtom]):
         """
         gro = cls("MOL", [], 0, 0, 0)
         if isinstance(atoms[0], GroAtom):
-            gro.atoms = atoms # type: ignore
+            gro.atoms = atoms  # type: ignore
         else:
-            gro.atoms = [
-                GroAtom(atom.index, atom.symbol, "MOL", 1, atom.coordinate)
-                for atom in atoms
-            ]
+            gro.atoms = [GroAtom(atom.index, atom.symbol, "MOL", 1, atom.coordinate) for atom in atoms]
         return gro
 
     def generate_ndx(self, path: str) -> None:
@@ -392,7 +378,6 @@ class GroFile(IMolecule[GroAtom]):
                 if line_length >= 10:  # Split lines after 10 indices
                     f.write("\n")
                     line_length = 0
-
 
 
 if __name__ == "__main__":
