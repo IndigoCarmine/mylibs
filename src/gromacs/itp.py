@@ -3,6 +3,14 @@
 # Bonds are created sequentially, with ring closures applied every 'nmols_in_rosette' monomers.
 # The resulting bonds are written in GROMACS [ intermolecular_interactions ] format
 # (ai aj funct length k), ready to be appended to the topology file.
+#
+# BEHAVIOUR CHANGE: the ring-closure wrap used to be computed on the 1-based atom
+# index directly, which made the closing bond of a rosette come out as atom 0 --
+# not a valid GROMACS index -- and, for the second and later rosettes, point at an
+# atom belonging to the *previous* rosette. Both are now fixed. Any
+# intermolecular_bond.itp generated before this change should be regenerated:
+# with natoms=10, nmols_in_rosette=6 the closures move from (51, 0) to (51, 60)
+# and from (111, 60) to (111, 120).
 def generate_inermolecular_interactions(
     natoms: int,
     nmols: int,
@@ -20,11 +28,14 @@ def generate_inermolecular_interactions(
         rosette_base = (i // nmols_in_rosette) * natoms_in_rosette
         pos_in_rosette = (i % nmols_in_rosette) * natoms
         for b in bonds:
-            # wrap each bond within its own rosette (ring closure), then shift to that rosette
+            # wrap each bond within its own rosette (ring closure), then shift to that rosette.
+            # The modulo is taken in 0-based space and shifted back, because GROMACS atom
+            # indices are 1-based: wrapping directly on the 1-based value makes the last
+            # atom of a rosette come out as 0, which is not a valid index.
             grobalbond.append(
                 (
-                    rosette_base + (b[0] + pos_in_rosette) % natoms_in_rosette,
-                    rosette_base + (b[1] + pos_in_rosette) % natoms_in_rosette,
+                    rosette_base + ((b[0] - 1 + pos_in_rosette) % natoms_in_rosette) + 1,
+                    rosette_base + ((b[1] - 1 + pos_in_rosette) % natoms_in_rosette) + 1,
                 )
             )
 
