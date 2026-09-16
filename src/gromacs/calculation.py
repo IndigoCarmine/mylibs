@@ -788,10 +788,7 @@ class SolvationSCP216(Calculation):
             "dummy.top": "",
             "grommp.sh": "echo 'this is a dummy file for automation'",
             "top_mod.py": default_file_content("top_mod.py"),
-            "mdrun.sh": _gmx_alias
-            + "\n\n\n"
-            + "inner_gmx solvate -cp input.gro -cs spc216.gro -o output.gro -p dummy.top \n\n\n"
-            + "python top_mod.py",
+            "mdrun.sh": _solvate_script("spc216.gro"),
         }
 
     @property
@@ -828,12 +825,11 @@ class SolvationMCH(Calculation):
             "dummy.top": "",
             "grommp.sh": "echo 'this is a dummy file for automation'",
             "top_mod.py": default_file_content("top_mod.py"),
-            "add_mchitp.py": default_file_content("add_mchitp.py"),
-            "mdrun.sh": _gmx_alias
-            + "\n\n\n"
-            + f"inner_gmx solvate -cp input.gro -cs MCH_solventbox.gro -o output.gro -p dummy.top -scale {self.scale} \n\n\n"
-            + "python top_mod.py \n\n\n"
-            + "python add_mchitp.py",
+            "mdrun.sh": _solvate_script(
+                "MCH_solventbox.gro",
+                options=f"-scale {self.scale}",
+                includes=["MCH.itp"],
+            ),
             "MCH.itp": default_file_content("MCH.itp"),
             "MCH_solventbox.gro": default_file_content("MCH_solventbox.gro"),
         }
@@ -893,6 +889,46 @@ fi
 
 
 """
+
+
+def _solvate_script(solvent_box: str, options: str = "", includes: list[str] | None = None) -> str:
+    """
+    Builds the `mdrun.sh` of a `gmx solvate` based solvation step.
+
+    The step has to survive being interrupted and resumed, which shapes it:
+
+    * `output.gro` is what the generated `run.sh` uses to decide that a step is
+      finished, so it is produced *last*, by renaming the solvated structure
+      only after the topology has been committed. Letting `gmx solvate` write
+      `output.gro` directly marks the step finished while `topo.top` is still
+      unedited, and the next step's grompp then fails on the missing solvent.
+    * `dummy.top` is truncated first. `gmx solvate -p` *appends* the molecule
+      count, so a re-run would otherwise leave the previous run's count behind.
+    * `set -e` stops the step at the first failure instead of renaming a
+      half-processed structure into place.
+
+    `top_mod.py` itself is idempotent, so re-running the whole step is safe.
+
+    Args:
+        solvent_box (str): The pre-equilibrated solvent box passed to `-cs`.
+        options (str): Extra options for `gmx solvate`, e.g. `-scale 0.57`.
+        includes (list[str] | None): itp files to `#include` in the topology.
+    Returns:
+        str: The bash script content.
+    """
+    include_options = "".join(f" --include {itp}" for itp in includes or [])
+    return (
+        "set -e\n"
+        + _gmx_alias
+        + "rm -f solvated.gro\n"
+        + ": > dummy.top\n\n\n"
+        + f"inner_gmx solvate -cp input.gro -cs {solvent_box} -o solvated.gro -p dummy.top {options}".rstrip()
+        + "\n\n\n"
+        + f"python top_mod.py{include_options}\n\n\n"
+        + "# Publish output.gro only now that the topology is committed: it is\n"
+        + "# the completion marker run.sh checks when a calculation is resumed.\n"
+        + "mv solvated.gro output.gro\n"
+    )
 
 
 class FileControl(Calculation):
@@ -1120,16 +1156,33 @@ class BarMethod(Calculation):
         }
 
 
-def copy_file_script(extension: str, destination: str) -> str:
+def copy_file_script(extension: str, destination: str, exclude: list[str] | None = None) -> str:
     """
     Generates a bash command to copy files with a specific extension to a destination directory.
+
+    The copy is done file by file rather than with a bare `cp *.ext`, for two reasons:
+    a glob that matches nothing is passed through literally (nullglob is off), which
+    makes the command fail for a step that produces no file of that kind; and scratch
+    files must not travel to the next step. In particular a `dummy.top` carried forward
+    would hand a later solvation step the previous step's molecule count.
+
     Args:
         extension (str): The file extension (e.g., "top", "itp").
         destination (str): The destination directory.
+        exclude (list[str] | None): File names to leave behind.
     Returns:
         str: The bash copy command.
     """
-    return f"cp *.{extension} ../{destination}"
+    skip = ""
+    if exclude:
+        skip = '    case "$f" in {}) continue;; esac\n'.format("|".join(exclude))
+    return (
+        f"for f in *.{extension}; do\n"
+        f'    [ -e "$f" ] || continue\n'
+        f"{skip}"
+        f'    cp "$f" ../{destination}/\n'
+        f"done"
+    )
 
 
 def copy_inherited_files_script(destination: str) -> str:
@@ -1141,7 +1194,9 @@ def copy_inherited_files_script(destination: str) -> str:
         str: The bash script content.
     """
     scripts = [
-        copy_file_script("top", destination),
+        # topo.top.orig (top_mod.py's pristine snapshot) does not match *.top on
+        # purpose, so every step snapshots the topology it was actually given.
+        copy_file_script("top", destination, exclude=["dummy.top", "topo_old.top"]),
         copy_file_script("itp", destination),
         f"cp output.gro ../{destination}/input.gro",
     ]
