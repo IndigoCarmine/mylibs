@@ -2,7 +2,7 @@ import unittest
 import sys
 import os
 
-from src.DFT.gjf import CalculationType
+from DFT.gjf import CalculationType
 
 class TestCalculationType(unittest.TestCase):
 

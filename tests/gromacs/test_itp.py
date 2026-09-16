@@ -2,7 +2,7 @@ import unittest
 import os
 import tempfile
 
-from src.gromacs.itp import generate_inermolecular_interactions
+from gromacs.itp import generate_inermolecular_interactions
 
 
 class TestItp(unittest.TestCase):

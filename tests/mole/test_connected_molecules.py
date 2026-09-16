@@ -3,8 +3,8 @@ import unittest
 
 import numpy as np
 
-from src.mole.connected_molecules import ConnectedMolecule
-from src.mole.xyz import XyzMolecule
+from mole.connected_molecules import ConnectedMolecule
+from mole.xyz import XyzMolecule
 
 TEST_DIR = os.path.dirname(__file__)
 

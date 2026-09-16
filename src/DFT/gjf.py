@@ -3,7 +3,7 @@ This module provides classes for generating Gaussian Job Files (GJF) for DFT cal
 It includes classes to define allocation properties, calculation types, and the overall GJF structure.
 """
 import dataclasses
-from src.mole import xyz
+from mole import xyz
 
 
 @dataclasses.dataclass

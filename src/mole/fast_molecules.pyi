@@ -1,4 +1,4 @@
-import src.mole.molecules as mol
+import mole.molecules as mol
 import numpy as np
 from scipy.spatial.transform import Rotation
 

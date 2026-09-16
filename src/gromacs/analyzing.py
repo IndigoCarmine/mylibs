@@ -8,9 +8,15 @@ from concurrent.futures import ProcessPoolExecutor
 import copy
 import os
 from typing import Callable, Iterator, Protocol
-import MDAnalysis as mda
+try:
+    import MDAnalysis as mda
+except ImportError as e:  # pragma: no cover - depends on the install extras
+    raise ImportError(
+        "gromacs.analyzing needs MDAnalysis, which ships as an optional extra. "
+        "Install it with: pip install 'yagaiG-libs[analysis]'"
+    ) from e
 from functools import partial, total_ordering
-from src.base_utils import cui_utils
+from base_utils import cui_utils
 import numpy as np
 import numpy.typing as npt
 import pandas as pd

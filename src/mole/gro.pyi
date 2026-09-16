@@ -3,8 +3,8 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from src.mole.molecules import AtomBase as AtomBase
-from src.mole.molecules import IMolecule as IMolecule
+from mole.molecules import AtomBase as AtomBase
+from mole.molecules import IMolecule as IMolecule
 
 class GroAtom(AtomBase):
     atom_name: str

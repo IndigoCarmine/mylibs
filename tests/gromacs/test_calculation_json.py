@@ -2,7 +2,7 @@ import os
 import sys
 import unittest
 
-from src.gromacs.calculation import (
+from gromacs.calculation import (
     EM,
     MD,
     MDType,

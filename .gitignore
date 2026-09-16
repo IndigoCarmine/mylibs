@@ -1,4 +1,6 @@
 .mypy_cache/
 mylibs-env/
 yagaiG_libs.egg-info/
+build/
+dist/
 **/__pycache__/**

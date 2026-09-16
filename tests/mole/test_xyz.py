@@ -4,7 +4,7 @@ import os
 import tempfile
 import numpy as np
 
-from src.mole.xyz import XyzMolecule, XyzAtom
+from mole.xyz import XyzMolecule, XyzAtom
 
 class TestXyzMolecule(unittest.TestCase):
 

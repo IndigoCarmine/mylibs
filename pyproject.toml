@@ -1,6 +1,6 @@
 [project]
 name = "yagaiG-libs"
-version = "0.2.20"
+version = "0.2.21"
 authors = [{ name = "Yuhei Yamada", email = "tamanisikamiani@gmail.com" }]
 description = "This library contains a mixture of code that can be used with YagaiG's measuring equipment and code for MD. In fact, it should have a more decent structure, but it was too much trouble, so we packaged it as it is."
 readme = "README.md"
@@ -34,6 +34,17 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["build", "twine", "mypy"]
+# Only gromacs.analyzing needs MDAnalysis; keep it out of the base install.
+analysis = ["MDAnalysis"]
+
+# The packages live under src/ but are published flat: `import mole.gro`,
+# not `import src.mole.gro`. Spell the layout out instead of relying on
+# auto-discovery, so the installed names always match the import statements.
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.setuptools.package-data]
 "gromacs" = ["DefaultFiles/*"]

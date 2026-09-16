@@ -5,7 +5,7 @@ import unittest
 from openmm import CustomNonbondedForce, HarmonicBondForce, NonbondedForce, System, unit
 import openmm.app as app
 
-from src.gromacs.relax import (
+from gromacs.relax import (
     add_fixed_atoms,
     add_intermolecular_bonds,
     add_softcore_lj,
@@ -205,7 +205,7 @@ class TestParseInterBonds(unittest.TestCase):
 
     def test_output_of_the_real_generator_parses(self):
         """End-to-end contract with the producer, src/gromacs/itp.py."""
-        from src.gromacs.itp import generate_inermolecular_interactions
+        from gromacs.itp import generate_inermolecular_interactions
 
         with tempfile.TemporaryDirectory() as tmpdir:
             itp_path = os.path.join(tmpdir, "inter.itp")

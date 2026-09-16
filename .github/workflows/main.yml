@@ -31,11 +31,13 @@ jobs:
       - name: Run unittests
         run: |
           echo "Running all unittests..."
-          export PYTHONPATH=$PYTHONPATH:$(pwd)
-          uv run python -m unittest discover tests
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/src
+          # -t . keeps the test packages addressed as tests.mole/... so that
+          # tests/mole does not shadow the installed top-level `mole` package.
+          uv run python -m unittest discover -s tests -t .
       
       - name: Run mypy
         run: |
           echo "Running all mypy..."
-          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/src
           uv run mypy src/ --enable-incomplete-feature=NewGenericSyntax

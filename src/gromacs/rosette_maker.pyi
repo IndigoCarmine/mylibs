@@ -1,4 +1,4 @@
-import src.mole.molecules as molecules
+import mole.molecules as molecules
 
 
 def make_rosette[
