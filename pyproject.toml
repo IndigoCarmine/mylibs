@@ -53,6 +53,11 @@ where = ["src"]
 ref-for-llm = { git = "https://github.com/IndigoCarmine/ref_for_llm.git" }
 
 [tool.mypy]
+# Respect the per-module follow_imports settings below for .pyi files too.
+# Without this, a per-module `follow_imports = "skip"` is ignored for stubs and
+# mypy still parses them (see the rdkit override at the end of this section).
+follow_imports_for_stubs = true
+
 # MDAnalysis ships no type stubs; don't fail type-checking on its imports.
 [[tool.mypy.overrides]]
 module = ["MDAnalysis", "MDAnalysis.*"]
@@ -62,6 +67,15 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["openmm", "openmm.*"]
 ignore_missing_imports = true
+
+# The rdkit-stubs shipped with rdkit 2026.3.3 are not valid Python: in
+# Chem/rdchem.pyi, GetProp() declares a parameter without a default after one
+# with a default. That is a parse error, which aborts the whole mypy run
+# ("errors prevented further checking"), so nothing in src/ gets checked at all.
+# Skip the stubs and treat rdkit as Any until upstream fixes them.
+[[tool.mypy.overrides]]
+module = ["rdkit", "rdkit.*"]
+follow_imports = "skip"
 
 [dependency-groups]
 dev = [

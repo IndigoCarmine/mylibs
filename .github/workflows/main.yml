@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -26,7 +26,9 @@ jobs:
 
       - name: Install dependencies via uv
         run: |
-          uv sync
+          # --frozen pins CI to uv.lock: most dependencies here are
+          # unconstrained, so an unfrozen sync silently picks up new releases.
+          uv sync --frozen
 
       - name: Run unittests
         run: |
@@ -40,4 +42,4 @@ jobs:
         run: |
           echo "Running all mypy..."
           export PYTHONPATH=$PYTHONPATH:$(pwd)/src
-          uv run mypy src/ --enable-incomplete-feature=NewGenericSyntax
+          uv run mypy src/
