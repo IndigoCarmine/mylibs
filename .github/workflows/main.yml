@@ -33,7 +33,6 @@ jobs:
       - name: Run unittests
         run: |
           echo "Running all unittests..."
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/src
           # -t . keeps the test packages addressed as tests.mole/... so that
           # tests/mole does not shadow the installed top-level `mole` package.
           uv run python -m unittest discover -s tests -t .
@@ -41,5 +40,15 @@ jobs:
       - name: Run mypy
         run: |
           echo "Running all mypy..."
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/src
           uv run mypy src/
+
+      - name: Run vermin
+        run: |
+          echo "Running all vermin..."
+          # The DefaultFiles scripts are not imported: they are copied into the
+          # run directory and executed by the cluster's own Python 3.6.8, so
+          # they have to stay compatible with it rather than with requires-python.
+          uv run vermin --no-tips --target=3.6 --violations src/gromacs/DefaultFiles/
+          # Everything else only has to stay within requires-python = ">=3.12".
+          uv run vermin --no-tips --target=3.12 --violations \
+            --exclude-regex '.*DefaultFiles.*' src/
