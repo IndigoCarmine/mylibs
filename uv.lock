@@ -1712,7 +1712,7 @@ wheels = [
 [[package]]
 name = "yagaig-libs"
 version = "0.2.21"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "annotated-types" },
     { name = "lmfit" },
