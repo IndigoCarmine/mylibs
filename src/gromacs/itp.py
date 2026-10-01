@@ -11,6 +11,18 @@
 # intermolecular_bond.itp generated before this change should be regenerated:
 # with natoms=10, nmols_in_rosette=6 the closures move from (51, 0) to (51, 60)
 # and from (111, 60) to (111, 120).
+
+import warnings as _warnings
+
+# gmx_harness: https://github.com/IndigoCarmine/gmx_harness
+_warnings.warn(
+    "gromacs.itp is deprecated; use gmx_harness.itp. "
+    "The GROMACS code moved to the gmx_harness library.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+
 def generate_inermolecular_interactions(
     natoms: int,
     nmols: int,

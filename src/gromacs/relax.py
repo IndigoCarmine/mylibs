@@ -30,6 +30,16 @@ The final structure is not guaranteed to match what GROMACS would produce, but
 it is a good starting point for a subsequent GROMACS minimization.
 """
 
+import warnings as _warnings
+
+# gmx_harness: https://github.com/IndigoCarmine/gmx_harness
+_warnings.warn(
+    "gromacs.relax is deprecated; use gmx_harness.relax (pip install 'gmx-harness[relax]'). "
+    "The GROMACS code moved to the gmx_harness library.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 import os
 import re
 

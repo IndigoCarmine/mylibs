@@ -4,6 +4,16 @@ It includes functionalities for recording and managing analysis results,
 processing multiple simulation files, and generating analysis scripts.
 """
 
+import warnings as _warnings
+
+# gmx_harness: https://github.com/IndigoCarmine/gmx_harness
+_warnings.warn(
+    "gromacs.analyzing is deprecated; use gmx_harness.analysis (pip install 'gmx-harness[analysis]'). "
+    "The GROMACS code moved to the gmx_harness library.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 from concurrent.futures import ProcessPoolExecutor
 import copy
 import os

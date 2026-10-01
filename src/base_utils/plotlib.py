@@ -409,6 +409,8 @@ def load_2ddata(path: str) -> list[XYData]:
 
 
 @llm_public()
+# gmx_harness: https://github.com/IndigoCarmine/gmx_harness
+@deprecated("Use gmx_harness.load_xvg instead (GROMACS code moved to gmx_harness)")
 def load_xvgdata(path: str) -> XYData:
     """
     Loads data from an XVG-formatted file.

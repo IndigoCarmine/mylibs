@@ -4,6 +4,16 @@ It includes functionalities for energy minimization (EM), molecular dynamics (MD
 solvation, and file control operations, along with utilities for generating simulation scripts.
 """
 
+import warnings as _warnings
+
+# gmx_harness: https://github.com/IndigoCarmine/gmx_harness
+_warnings.warn(
+    "gromacs.calculation is deprecated; use gmx_harness (EM, MD, build_plan, launch, save_json, ...). "
+    "The GROMACS code moved to the gmx_harness library.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 from abc import ABC, abstractmethod
 import warnings
 from pydantic.dataclasses import dataclass, Field

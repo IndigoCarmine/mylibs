@@ -4,6 +4,16 @@ It includes functionalities for representing atoms and molecules in the GRO form
 and converting between GRO and XYZ file formats.
 """
 
+import warnings as _warnings
+
+# gmx_harness: https://github.com/IndigoCarmine/gmx_harness
+_warnings.warn(
+    "mole.gro is deprecated; use gmx_harness.GroFile / gmx_harness.io.gro. "
+    "The GROMACS code moved to the gmx_harness library.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import override

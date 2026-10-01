@@ -3,6 +3,16 @@ This module provides a class for parsing, manipulating, and exporting GROMACS MD
 It also defines default MDP parameters for common simulation types like energy minimization (EM) and molecular dynamics (MD).
 """
 
+import warnings as _warnings
+
+# gmx_harness: https://github.com/IndigoCarmine/gmx_harness
+_warnings.warn(
+    "gromacs.mdp is deprecated; use gmx_harness.mdp. "
+    "The GROMACS code moved to the gmx_harness library.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 from typing import Callable
 import copy
 
