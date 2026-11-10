@@ -109,6 +109,11 @@ class Solvation(Calculation):
     solvation
     """
 
+    solvent: str
+    nmol: int
+    ntry: int
+    calculation_name: str
+
     def __init__(
         self,
         solvent: str = "MCH",
@@ -143,6 +148,9 @@ class SolvationMCH(Calculation):
         name (str): The name of the calculation.
     """
 
+    calculation_name: str
+    scale: float
+
     def __init__(self, calculation_name: str = "solvation", scale: float = 0.57): ...
     @override
     def generate(self) -> dict[str, str]: ...
@@ -152,6 +160,9 @@ class SolvationMCH(Calculation):
     def check(self, cell_size: np.ndarray) -> "SolvationMCH": ...
 
 class FileControl(Calculation):
+    calculation_name: str
+    command: str
+
     def __init__(self, name: str, command: str) -> None: ...
     @override
     def generate(self) -> dict[str, str]: ...

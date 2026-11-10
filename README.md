@@ -19,6 +19,7 @@ molecules.pyで定義された構造をもとにして、XYZファイル、GRO�
 ### gromacs
 Gromacsの計算ファイル群を作成するためのものです。
 今のところ、特にRosetteを組む超分子ポリマーに特化した機能が多くあります。
+`gromacs.drawio` の `to_drawio` / `save_drawio(calcs, "workflow.drawio", define_labels={...}, none_label="なし")` で、計算リストを draw.io のフローチャート（ステップごとのカード）として出力できます。
 
 
 ### base_utils
